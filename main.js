@@ -35,14 +35,14 @@ const ocrApiKey = "e3b7e80ac588957";
 const db = "https://raw.githubusercontent.com/snollygolly/sourceio-automation/master/db.json";
 const message = "papa bless, one love /r/javascript";
 const wordFreq = 1250;
-const mineFreq = 2000;
+const mineFreq = 3000;
 const minerLevel = 20;
 
 app = {
 	start: () => {
 		$.get("https://raw.githubusercontent.com/snollygolly/sourceio-automation/master/db.json").done((data) => {
 			listing = JSON.parse(data);
-			automate();
+			app.automate();
 		});
 	},
 
