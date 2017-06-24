@@ -6,6 +6,8 @@ let waiting = false;
 let hackProgress = 0;
 let wordLoop = null;
 let minerLoop = null;
+let upgradeLoop = null;
+let myBT = 0;
 let minerStatus = [
 	{
 		name: "shop-basic-miner",
@@ -32,13 +34,19 @@ let minerStatus = [
 		value: 0
 	}
 ];
-
+let maxStats = {
+	charge: 30,
+	strength: 4,
+	regen: 10
+};
+const firewalls = ["1", "2", "3"];
 const ocrApiKey = "e3b7e80ac588957";
 const db = "https://raw.githubusercontent.com/snollygolly/sourceio-automation/master/db.json";
 let message = "papa bless, one love /r/javascript";
 let wordFreq = 1250;
 let mineFreq = 3000;
 let blockFreq = 5000;
+let upgradeFreq = 7500;
 let minerLevel = 20;
 
 app = {
@@ -56,12 +64,17 @@ app = {
 	automate: () => {
 		// first check the windows are open, and open them if they aren't
 		if ($("#player-list").is(":visible") === false) {
-			log("! Target list must be open");
+			log("* Target list must be open");
 			$("#desktop-list").children("img").click();
 		}
 		if ($("#window-shop").is(":visible") === false) {
-			log("! Black market must be open");
+			log("* Black market must be open");
 			$("#desktop-shop").children("img").click();
+			$("#desktop-miner").children("img").click();
+		}
+		if ($("#window-computer").is(":visible") === false) {
+			log("* My computer must be open");
+			$("#desktop-computer").children("img").click();
 		}
 		isAutomated = true;
 		// start by getting the first target in the list
@@ -79,11 +92,14 @@ app = {
 			return;
 		}
 		$("#window-other-port2").click();
+		// handle upgrades
+		app.loops.upgrade();
 		// start the loop that does the guessing
 		wordLoop = setInterval(app.loops.word, wordFreq);
 		// start the loop for btc monitoring
-		minerLoop = setInterval(app.loops.miner, mineFreq
-		);
+		minerLoop = setInterval(app.loops.miner, mineFreq);
+		// start the loop for upgrades
+		//upgradeLoop = setInterval(app.loops.upgrade, upgradeFreq);
 	},
 
 	loops: {
@@ -130,6 +146,59 @@ app = {
 					}
 				}
 			}
+		},
+		upgrade: () => {
+			myBT = parseInt($("#window-my-coinamount").text());
+			// if the back button is visible, we're on a page, let's back out
+			if ($("#window-firewall-pagebutton").is(":visible") === true) {
+				$("#window-firewall-pagebutton").click();
+			}
+			// take it off the top
+			const firewall = firewalls.shift()
+			firewalls.push(firewall);
+			// select the firewall
+			log(`. Handling upgrades to firewall ${firewall}`);
+			$(`#window-firewall-part${firewall}`).click();
+			// get stats
+			const stats = {
+				charge: parseInt($("#shop-max-charges").text()),
+				strength: parseInt($("#shop-strength").text()),
+				regen: parseInt($("#shop-regen").text()),
+			};
+			// start checking prices, start with strength
+			if (stats.strength < maxStats.strength) {
+				log(". Strength isn't maxed");
+				const strengthPrice = parseInt($("#shop-firewall-difficulty-value").text());
+				if (strengthPrice < myBT) {
+					log(". Buying strength");
+					$("#shop-firewall-difficulty").click();
+					return;
+				}
+			}
+			// check max charges
+			if (stats.charge < maxStats.charge) {
+				log(". Charge isn't maxed");
+				const chargePrice = parseInt($("#shop-firewall-max_charge10-value").text());
+				if (chargePrice < myBT) {
+					$("#shop-firewall-max_charge10").click();
+					log(". Buying charge");
+					return;
+				}
+			}
+			// check regen
+			if (stats.regen < maxStats.regen) {
+				log(". Regex isn't maxed");
+				const regenPrice = parseInt($("#shop-firewall-regen-value").text());
+				if (regenPrice < myBT) {
+					$("#shop-firewall-regen").click();
+					log(". Buying regex");
+					return;
+				}
+			}
+			// nothing matched, let's go back
+			if ($("#window-firewall-pagebutton").is(":visible") === true) {
+				$("#window-firewall-pagebutton").click();
+			}
 		}
 	},
 
@@ -139,16 +208,20 @@ app = {
 	},
 
 	stop: () => {
-		if (wordLoop === null && minerLoop === null) {
+		if (wordLoop === null && minerLoop === null && upgradeLoop === null) {
 			log("! No loops to stop");
 			return;
 		}
 		isAutomated = false;
 		block = false;
+		waiting = false;
 		clearInterval(wordLoop);
-		clearInterval(minerLoop);
 		wordLoop = null;
-		log("* Stopped loop");
+		clearInterval(minerLoop);
+		minerLoop = null;
+		clearInterval(upgradeLoop);
+		upgradeLoop = null;
+		log("* Stopped loops");
 	},
 
 	exportListing: () => {
