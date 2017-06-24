@@ -187,11 +187,11 @@ app = {
 			}
 			// check regen
 			if (stats.regen < maxStats.regen) {
-				log(". Regex isn't maxed");
+				log(". Regen isn't maxed");
 				const regenPrice = parseInt($("#shop-firewall-regen-value").text());
 				if (regenPrice < myBT) {
 					$("#shop-firewall-regen").click();
-					log(". Buying regex");
+					log(". Buying regen");
 					return;
 				}
 			}
