@@ -39,9 +39,10 @@ const mineFreq = 2000;
 const minerLevel = 20;
 
 app = {
-	downloadListing: () => {
+	start: () => {
 		$.get("https://raw.githubusercontent.com/snollygolly/sourceio-automation/master/db.json").done((data) => {
 			listing = JSON.parse(data);
+			automate();
 		});
 	},
 
