@@ -34,7 +34,8 @@ let minerStatus = [
 const ocrApiKey = "e3b7e80ac588957";
 const db = "https://raw.githubusercontent.com/snollygolly/sourceio-automation/master/db.json";
 const message = "papa bless, one love /r/javascript";
-const frequency = 1250;
+const wordFreq = 1250;
+const mineFreq = 2000;
 const minerLevel = 20;
 
 app = {
@@ -70,13 +71,15 @@ app = {
 		if (portStyle.indexOf("opacity: 1") === -1) {
 			// this port costs too much, let's wait a bit
 			console.log("* Hack too expensive, waiting");
-			setTimeout(app.automate, frequency);
+			setTimeout(app.automate, 1000);
+			return;
 		}
 		$("#window-other-port2").click();
 		// start the loop that does the guessing
-		wordLoop = setInterval(app.loops.word, frequency);
+		wordLoop = setInterval(app.loops.word, wordFreq);
 		// start the loop for btc monitoring
-		minerLoop = setInterval(app.loops.miner, frequency);
+		minerLoop = setInterval(app.loops.miner, mineFreq
+		);
 	},
 
 	loops: {
