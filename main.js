@@ -35,15 +35,15 @@ let minerStatus = [
 
 const ocrApiKey = "e3b7e80ac588957";
 const db = "https://raw.githubusercontent.com/snollygolly/sourceio-automation/master/db.json";
-const message = "papa bless, one love /r/javascript";
-const wordFreq = 1250;
-const mineFreq = 3000;
-const blockFreq = 5000;
-const minerLevel = 20;
+let message = "papa bless, one love /r/javascript";
+let wordFreq = 1250;
+let mineFreq = 3000;
+let blockFreq = 5000;
+let minerLevel = 20;
 
 app = {
 	start: () => {
-		$.get("https://raw.githubusercontent.com/snollygolly/sourceio-automation/master/db.json").done((data) => {
+		$.get(db).done((data) => {
 			listing = JSON.parse(data);
 			app.automate();
 		});
@@ -105,6 +105,7 @@ app = {
 				if (hackProgress === newHackProgress) {
 					// the bar hasn't moved
 					log("* Progress bar hasn't moved, waiting");
+					// TODO: make this an automatic process
 					return;
 				} else {
 					// the bar has moved
