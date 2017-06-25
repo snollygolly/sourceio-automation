@@ -40,7 +40,7 @@ let maxStats = {
 	regen: 10
 };
 const firewalls = ["1", "2", "3"];
-const ocrApiKey = "e3b7e80ac588957";
+const ocrApiKey = "XXX";
 const db = "https://raw.githubusercontent.com/snollygolly/sourceio-automation/master/db.json";
 let message = "papa bless, one love /r/javascript";
 let wordFreq = 1250;
