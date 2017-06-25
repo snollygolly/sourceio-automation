@@ -85,7 +85,7 @@ app = {
 		$("#player-list").children("tr").eq(playerToAttack)[0].click();
 		$("#window-other-button").click();
 		// do a check for money
-		const portStyle = $("#window-other-port2").attr("style");
+		const portStyle = $(`#window-other-port${firewalls[0]}`).attr("style");
 		if (portStyle.indexOf("opacity: 1") === -1) {
 			// this port costs too much, let's wait a bit
 			log("* Hack too expensive, waiting");
