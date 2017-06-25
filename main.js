@@ -243,7 +243,7 @@ app = {
 		}
 		else {
 			log("* Can't find the word link...");
-			app.restart();	
+			app.restart();
 		}
 	},
 
@@ -266,7 +266,7 @@ app = {
 			url: url
 		}).done((data) => {
 			const word = String(data["ParsedResults"][0]["ParsedText"]).trim().toLowerCase().split(" ").join("");
-			if (word.length > 3) {
+			if (word.length > 2) {
 				log(`. Got data: [${word}]`);
 				$("#tool-type-word").val(word);
 				if (isAutomated === true) {
