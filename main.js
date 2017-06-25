@@ -259,7 +259,7 @@ app = {
 			language: "eng",
 			url: url
 		}).done((data) => {
-			const word = String(data["ParsedResults"][0]["ParsedText"]).trim().toLowerCase();
+			const word = String(data["ParsedResults"][0]["ParsedText"]).trim().toLowerCase().split(" ").join("");
 			if (word.length > 3) {
 				log(`. Got data: [${word}]`);
 				$("#tool-type-word").val(word);
