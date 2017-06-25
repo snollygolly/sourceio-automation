@@ -48,6 +48,7 @@ let mineFreq = 3000;
 let blockFreq = 5000;
 let upgradeFreq = 7500;
 let minerLevel = 20;
+let playerToAttack = 0;
 
 app = {
 	start: () => {
@@ -78,10 +79,10 @@ app = {
 		}
 		isAutomated = true;
 		// start by getting the first target in the list
-		const targetName = $("#player-list").children("tr").eq(0)[0].innerText;
+		const targetName = $("#player-list").children("tr").eq(playerToAttack)[0].innerText;
 		log(`. Now attacking ${targetName}`);
 		// click it, and then hack, and then port b
-		$("#player-list").children("tr").eq(0)[0].click();
+		$("#player-list").children("tr").eq(playerToAttack)[0].click();
 		$("#window-other-button").click();
 		// do a check for money
 		const portStyle = $("#window-other-port2").attr("style");
