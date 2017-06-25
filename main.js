@@ -231,14 +231,20 @@ app = {
 
 	go: () => {
 		const wordLink = $(".tool-type-img").prop("src");
-		if (listing.hasOwnProperty(wordLink) === true) {
-			const word = listing[wordLink];
-			log(`. Found word: [${word}]`);
-			app.submit(word);
-			return;
+		if (wordLink !== null) {
+			if (listing.hasOwnProperty(wordLink) === true) {
+				const word = listing[wordLink];
+				log(`. Found word: [${word}]`);
+				app.submit(word);
+				return;
+			}
+			log("* Not seen, trying OCR...");
+			app.ocr(wordLink);
 		}
-		log("* Not seen, trying OCR...");
-		app.ocr(wordLink);
+		else {
+			log("* Can't find the word link...");
+			app.restart();	
+		}
 	},
 
 	submit: (word) => {
