@@ -42,7 +42,7 @@ let maxStats = {
 const firewalls = ["1", "2", "3"];
 const ocrApiKey = "XXX";
 const db = "https://raw.githubusercontent.com/bozoweed/sourceio-automation/master/db.json";
-let message = "papa bless, one love /r/javascript";
+let message = "papa bless, one love ";
 let wordFreq = 1250;
 let mineFreq = 3000;
 let blockFreq = 5000;
@@ -231,13 +231,15 @@ app = {
 
 	go: () => {
 		const wordLink = $(".tool-type-img").prop("src");
-		if (wordLink !== "http://s0urce.io/client/img/words/template.png") {
+		if (wordLink !== "http://www.s0urce.io/client/img/words/template.png") {
 			if (listing.hasOwnProperty(wordLink) === true) {
 				const word = listing[wordLink];
 				log(`. Found word: [${word}]`);
 				app.submit(word);
 				return;
 			}
+			log(`. Found word: [${wordLink}]`);
+			log(`.[${listing[wordLink]}]`);
 			log("* Not seen, trying OCR...");
 			app.ocr(wordLink);
 		}
@@ -266,7 +268,7 @@ app = {
 			url: url
 		}).done((data) => {
 			const word = String(data["ParsedResults"][0]["ParsedText"]).trim().toLowerCase().split(" ").join("");
-			if (word.length > 3) {
+			if (word.length > 2) {
 				log(`. Got data: [${word}]`);
 				$("#tool-type-word").val(word);
 				if (isAutomated === true) {
