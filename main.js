@@ -121,8 +121,7 @@ app = {
 				// check to see if it's new
 				if (hackProgress === newHackProgress) {
 					// the bar hasn't moved
-					log("* Progress bar hasn't moved, waiting");
-					// TODO: make this an automatic process
+					app.restart();	//restart if not work
 					return;
 				} else {
 					// the bar has moved
