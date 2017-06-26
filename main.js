@@ -77,6 +77,10 @@ app = {
 			log("* My computer must be open");
 			$("#desktop-computer").children("img").click();
 		}
+		if ($("#window-bot").is(":visible") === false) {
+			log("* Opening bot window");
+			app.gui();
+		}
 		isAutomated = true;
 		// start by getting the first target in the list
 		const targetName = $("#player-list").children("tr").eq(playerToAttack)[0].innerText;
@@ -101,6 +105,95 @@ app = {
 		minerLoop = setInterval(app.loops.miner, mineFreq);
 		// start the loop for upgrades
 		//upgradeLoop = setInterval(app.loops.upgrade, upgradeFreq);
+	},
+
+	gui: () => {
+		//check if bot window has been appended already
+		if ($("#window-bot").length > 0) {
+			$("#window-bot").show();
+		}
+		else {
+			//change these variables to ajust the size of the bot's window in px
+			let windowWidth = "320px";
+			let windowHeight = "350px";
+			//create all of the elements for the bot's gui
+			let $botWindow = $("<div>", {
+				class: "window",
+				id: "window-bot",
+				css: {
+					"border-color": "rgb(77, 100, 122);",
+					"color:": "rgb(191, 207, 210)",
+					"height": windowHeight,
+					"width": windowWidth,
+					"z-index": "10",
+					"top": "363px",
+					"left": "914px"
+				}
+			});
+			let $botTitle = $("<div>", {
+				class: "window-title",
+				css: { "background-color": "rgb(77, 100, 122);" },
+				text: "Source.io Bot"
+			});
+			let $closeButton = $("<span>", {
+				class: "window-close-style"
+			});
+			let $closeButtonImage = $("<img>", {
+				class: "window-close-img",
+				src: "http://s0urce.io/client/img/icon-close.png"
+			});
+			let $botContent = $("<div>", {
+				class: "window-content",
+				css: {
+					"width": windowWidth,
+					"height": windowHeight
+				}
+			});
+			let $restartButton = $("<div>", {
+				class: "button",
+				css: {
+					"display": "block",
+					"margin-bottom": "15px"
+				},
+				text: "Restart Bot"
+			});
+			let $stopButton = $("<div>", {
+				class: "button",
+				css: {
+					"display": "block",
+					"margin-bottom": "15px"
+				},
+				text: "Stop Bot"
+			});
+			let $gitHubLink = $("<div>" , {
+				class: "button",
+				css: {"display": "block", "margin-top": "65%"}, 
+				text: "This script is on Github!"
+			});
+			//bind functions to the gui's buttons
+			$closeButton.click(() => {
+				$botWindow.hide();
+			});
+			$restartButton.click(() => {
+				app.restart();
+			});
+			$stopButton.click(() => {
+				app.stop();
+			});
+			$gitHubLink.click(() => {
+				window.open("https://github.com/snollygolly/sourceio-automation");
+			});
+			$botWindow.appendTo(".window-wrapper");
+			$botTitle.appendTo($botWindow);
+			$closeButton.appendTo($botTitle);
+			$closeButtonImage.appendTo($closeButton);
+			$botContent.appendTo($botWindow);
+			$restartButton.appendTo($botContent);
+			$stopButton.appendTo($botContent);
+			$gitHubLink.appendTo($botContent);
+			//make the bot window draggable
+			Draggable("window-bot");
+		}
 	},
 
 	loops: {
@@ -281,6 +374,58 @@ app = {
 	}
 };
 
+
+let Draggable = function (id) {
+	var el = document.getElementById(id),
+		isDragReady = false,
+		dragoffset = {
+			x: 0,
+			y: 0
+		};
+	this.init = function () {
+		this.events();
+	};
+	//events for the element 
+	this.events = function () {
+		var self = this;
+		
+		_on(el, 'mousedown', function (e) {
+			isDragReady = true;
+			//corssbrowser mouse pointer values 
+			e.pageX = e.pageX || e.clientX + (document.documentElement.scrollLeft ?
+				document.documentElement.scrollLeft :
+				document.body.scrollLeft);
+			e.pageY = e.pageY || e.clientY + (document.documentElement.scrollTop ?
+				document.documentElement.scrollTop :
+				document.body.scrollTop);
+			dragoffset.x = e.pageX - el.offsetLeft;
+			dragoffset.y = e.pageY - el.offsetTop;
+		});
+		_on(document, 'mouseup', function () {
+			isDragReady = false;
+		});
+		_on(document, 'mousemove', function (e) {
+			if (isDragReady) {
+				e.pageX = e.pageX || e.clientX + (document.documentElement.scrollLeft ?
+					document.documentElement.scrollLeft :
+					document.body.scrollLeft);
+				e.pageY = e.pageY || e.clientY + (document.documentElement.scrollTop ?
+					document.documentElement.scrollTop :
+					document.body.scrollTop);
+				el.style.top = (e.pageY - dragoffset.y) + "px";
+				el.style.left = (e.pageX - dragoffset.x) + "px";
+			}
+		});
+	};
+	//cross browser event Helper function 
+	var _on = function (el, event, fn) {
+		document.attachEvent ? el.attachEvent('on' + event, fn) : el.addEventListener(event, fn, !0);
+	};
+	this.init();
+}
+
+
+
 function parseHackProgress(progress) {
 	// remove the %;
 	const newProgress = progress.slice(0, -2);
@@ -291,3 +436,5 @@ function parseHackProgress(progress) {
 function log(message) {
 	console.log(`:: ${message}`);
 }
+
+
