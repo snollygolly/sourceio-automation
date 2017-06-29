@@ -153,7 +153,7 @@ app = {
 
             //bind functions to the gui's buttons
             $("#bot-title > span.window-close-style").on("click", () => {
-                $("window-bot").hide();
+                $("#window-bot").hide();
             });
 
             $("#restart-button").on("click", () => {
