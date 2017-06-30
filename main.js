@@ -106,6 +106,7 @@ app = {
 		// handle upgrades
 		app.loops.upgrade();
 		// start the loop that does the guessing
+		//wordLoop = setInterval(app.loops.word, wordFreq);
 		wordLoop = setInterval(app.loops.word, wordFreq);
 		// start the loop for btc monitoring
 		minerLoop = setInterval(app.loops.miner, mineFreq);
@@ -114,110 +115,83 @@ app = {
 	},
 
 	gui: () => {
-		//check if bot window has been appended already
-		if ($("#window-bot").length > 0) {
-			$("#window-bot").show();
-		}
-		else {
-			//change these variables to ajust the size of the bot's window in px
-			let windowWidth = "320px";
-			let windowHeight = "350px";
-			//create all of the elements for the bot's gui
-			let $botWindow = $("<div>", {
-				class: "window",
-				id: "window-bot",
-				css: {
-					"border-color": "rgb(77, 100, 122);",
-					"color:": "rgb(191, 207, 210)",
-					"height": windowHeight,
-					"width": windowWidth,
-					"z-index": "10",
-					"top": "363px",
-					"left": "914px"
-				}
-			});
-			let $botTitle = $("<div>", {
-				class: "window-title",
-				css: { "background-color": "rgb(77, 100, 122);" },
-				text: "Source.io Bot"
-			});
-			let $closeButton = $("<span>", {
-				class: "window-close-style"
-			});
-			let $closeButtonImage = $("<img>", {
-				class: "window-close-img",
-				src: "http://s0urce.io/client/img/icon-close.png"
-			});
-			let $botContent = $("<div>", {
-				class: "window-content",
-				css: {
-					"width": windowWidth,
-					"height": windowHeight
-				}
-			});
-			let $restartButton = $("<div>", {
-				class: "button",
-				css: {
-					"display": "block",
-					"margin-bottom": "15px"
-				},
-				text: "Restart Bot"
-			});
-			let $stopButton = $("<div>", {
-				class: "button",
-				css: {
-					"display": "block",
-					"margin-bottom": "15px"
-				},
-				text: "Stop Bot"
-			});
-			let $gitHubLink = $("<div>" , {
-				class: "button",
-				css: {"display": "block", "margin-top": "65%"},
-				text: "This script is on Github!"
-			});
-			//bind functions to the gui's buttons
-			$closeButton.click(() => {
-				$botWindow.hide();
-			});
-			$restartButton.click(() => {
-				app.restart();
-			});
-			$stopButton.click(() => {
-				app.stop();
-			});
-			$gitHubLink.click(() => {
-				window.open("https://github.com/snollygolly/sourceio-automation");
-			});
-			$botWindow.appendTo(".window-wrapper");
-			$botTitle.appendTo($botWindow);
-			$closeButton.appendTo($botTitle);
-			$closeButtonImage.appendTo($closeButton);
-			$botContent.appendTo($botWindow);
-			$restartButton.appendTo($botContent);
-			$stopButton.appendTo($botContent);
-			$gitHubLink.appendTo($botContent);
-			//make the bot window draggable
-			botWindow = ("#window-bot");
+        //check if bot window has been appended already
+        if ($("#window-bot").length > 0) {
+            $("#window-bot").show();
+        }
+        else {
+            //Change windowWidth and windowHeight to change the bot's window size
+            let windowWidth = "320px";
+            let windowHeight = "350px";
+            let botHTML = 
+            "<div id='window-bot' class='window' style='" +
+			"border-color:rgb(77, 100, 122);" + 
+			"color:rgb(191, 207, 210);" +
+			"height:" + windowHeight +
+			";width:" + windowWidth +
+			";z-index:10;" + 
+			"top:363px;" + 
+			"left:914px'>" +
+                "<div id='bot-title' class='window-title' style='background-color: rgb(77, 100, 122)'>Source.io Bot" +
+                    "<span class='window-close-style'>" +
+                        "<img class='window-close-img' src='http://s0urce.io/client/img/icon-close.png'>" +
+                    "</span>" +
+                    "</div>" +
+                    "<div class='window-content' style='width:" + windowWidth + ";height:"+windowHeight + "'>" + 
+                        "<div id='restart-button' class='button' style='display: block; margin-bottom: 15px'>Restart Bot</div>" +
+                        "<div id='stop-button' class='button' style='display: block; margin-bottom: 15px'>Stop Bot</div>" +
+						"<span style='font-size:18px'>Hack speed:" +
+							"<input type='text' id='hack-speed-input' class='input-form' onkeypress='return event.charCode >= 48 && event.charCode <= 57' style='width:50px;margin:0px 0px 15px 5px' value=" + wordFreq +
+							"><span>(ms)</span>" +
+						"</span>" +
+                        "<div id='github-button' class='button' style='display: block; margin-top: 50%'>This script is on Github!</div>" +
+                    "</div>" +
+                "</div>" +
+            "</div>";
 
-			$(document).on("mousedown", botWindow, (e) => {
-				isDragReady = true;
-				dragOffset.x = e.pageX - $(botWindow).position().left;
-				dragOffset.y = e.pageY - $(botWindow).position().top;
-			});
+            $(".window-wrapper").append(botHTML);
 
-			$(document).on("mouseup", botWindow, (e) => {
-				isDragReady = false;
-			});
+            //bind functions to the gui's buttons
+            $("#bot-title > span.window-close-style").on("click", () => {
+                $("#window-bot").hide();
+            });
 
-			$(document).on("mousemove", (e) => {
-				if (isDragReady) {
-					$(botWindow).css("top", (e.pageY - dragOffset.y) + "px");
-					$(botWindow).css("left", (e.pageX - dragOffset.x) + "px");
-				}
+            $("#restart-button").on("click", () => {
+                app.restart();
+            });
+
+            $("#stop-button").on("click", () => {
+                app.stop();
+            });
+
+            $("#github-button").on("click", () => {
+                window.open("https://github.com/snollygolly/sourceio-automation")
+            });
+			
+			$("#hack-speed-input").change(() => {
+				wordFreq = $("#hack-speed-input").val();
 			});
-		}
-	},
+            //make the bot window draggable
+            botWindow = ("#window-bot");
+
+            $(document).on("mousedown", botWindow, (e) => {
+                isDragReady = true;
+                dragOffset.x = e.pageX - $(botWindow).position().left;
+                dragOffset.y = e.pageY - $(botWindow).position().top;
+            });
+
+            $(document).on("mouseup", botWindow, (e) => {
+                isDragReady = false;
+            });
+
+            $(document).on("mousemove", (e) => {
+                if (isDragReady) {
+                    $(botWindow).css("top", (e.pageY - dragOffset.y) + "px");
+                    $(botWindow).css("left", (e.pageX - dragOffset.x) + "px");
+                }
+            });
+        }
+    },
 
 	loops: {
 		word: () => {
@@ -316,7 +290,7 @@ app = {
 			if ($("#window-firewall-pagebutton").is(":visible") === true) {
 				$("#window-firewall-pagebutton").click();
 			}
-		}
+		},
 	},
 
 	restart: () => {
