@@ -1,6 +1,8 @@
 # sourceio-automation
 A bot to automatically play s0urce.io for you
 
+## NOTE: As of July 7th (Beta 2.2), the words have been revamped, and the existing database won't work anymore.  I'm working to investigate, but please don't make new issues if the bot isn't working.
+
 ## Configuration
 
 The main file (`main.js`) contains several values you may want to change.
