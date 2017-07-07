@@ -1,7 +1,7 @@
 # sourceio-automation
 A bot to automatically play s0urce.io for you
 
-### Note: As of Beta 2.2, OCR is unreliable.  If you find a word I missed in the database, please issue a pull request or open an issue and I'll fix it.
+### Note: As of Beta 2.2, OCR is unreliable and the bot isn't working.
 
 ## Configuration
 
