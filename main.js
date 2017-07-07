@@ -102,7 +102,8 @@ app = {
 			setTimeout(app.automate, blockFreq);
 			return;
 		}
-		$("#window-other-port2").click();
+		const portNumber = getRandomInt(1,3);
+		$(`#window-other-port${portNumber}`).click();
 		// handle upgrades
 		app.loops.upgrade();
 		// start the loop that does the guessing
@@ -123,21 +124,21 @@ app = {
             //Change windowWidth and windowHeight to change the bot's window size
             let windowWidth = "320px";
             let windowHeight = "350px";
-            let botHTML = 
+            let botHTML =
             "<div id='window-bot' class='window' style='" +
-			"border-color:rgb(77, 100, 122);" + 
+			"border-color:rgb(77, 100, 122);" +
 			"color:rgb(191, 207, 210);" +
 			"height:" + windowHeight +
 			";width:" + windowWidth +
-			";z-index:10;" + 
-			"top:363px;" + 
+			";z-index:10;" +
+			"top:363px;" +
 			"left:914px'>" +
                 "<div id='bot-title' class='window-title' style='background-color: rgb(77, 100, 122)'>Source.io Bot" +
                     "<span class='window-close-style'>" +
                         "<img class='window-close-img' src='http://s0urce.io/client/img/icon-close.png'>" +
                     "</span>" +
                     "</div>" +
-                    "<div class='window-content' style='width:" + windowWidth + ";height:"+windowHeight + "'>" + 
+                    "<div class='window-content' style='width:" + windowWidth + ";height:"+windowHeight + "'>" +
                         "<div id='restart-button' class='button' style='display: block; margin-bottom: 15px'>Restart Bot</div>" +
                         "<div id='stop-button' class='button' style='display: block; margin-bottom: 15px'>Stop Bot</div>" +
 						"<span style='font-size:18px'>Hack speed:" +
@@ -167,7 +168,7 @@ app = {
             $("#github-button").on("click", () => {
                 window.open("https://github.com/snollygolly/sourceio-automation")
             });
-			
+
 			$("#hack-speed-input").change(() => {
 				wordFreq = $("#hack-speed-input").val();
 			});
@@ -376,6 +377,10 @@ function parseHackProgress(progress) {
 	const newProgress = progress.slice(0, -2);
 	const newProgressParts = newProgress.split("width: ");
 	return parseInt(newProgressParts.pop());
+}
+
+function getRandomInt(min, max) {
+	return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
 function log(message) {
