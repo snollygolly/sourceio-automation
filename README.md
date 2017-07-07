@@ -1,7 +1,7 @@
 # sourceio-automation
 A bot to automatically play s0urce.io for you
 
-### Note: As of Beta 2.2, OCR is unreliable and must be MANUALLY updated.  If the DB isn't working, try generating a new one from inside the `builder` folder.
+### Note: As of Beta 2.2, OCR is unreliable and the database must be MANUALLY updated.  If the DB isn't working, try generating a new one from inside the `builder` folder.
 
 ## Configuration
 
