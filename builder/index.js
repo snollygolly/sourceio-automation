@@ -30,7 +30,7 @@ co(function* co(){
 			method: "GET",
 			encoding: null
 		});
-		const path = `${outputPath}/easy-${easyCount}.png`;
+		const path = `${outputPath}/images/easy-${easyCount}.png`;
 		console.log(`* Writing easy image ${easyCount} to ${path}`);
 		yield fs.writeFileAsync(path, image, "binary");
 		result[url] = hashLookup(image);
@@ -46,7 +46,7 @@ co(function* co(){
 			encoding: null
 		});
 		result[url] = "";
-		const path = `${outputPath}/medium-${mediumCount}.png`;
+		const path = `${outputPath}/images/medium-${mediumCount}.png`;
 		result[url] = hashLookup(image);
 		console.log(`* Writing medium image ${mediumCount} to ${path}`);
 		yield fs.writeFileAsync(path, image, "binary");
@@ -62,7 +62,7 @@ co(function* co(){
 			encoding: null
 		});
 		result[url] = "";
-		const path = `${outputPath}/hard-${hardCount}.png`;
+		const path = `${outputPath}/images/hard-${hardCount}.png`;
 		result[url] = hashLookup(image);
 		console.log(`* Writing hard image ${hardCount} to ${path}`);
 		yield fs.writeFileAsync(path, image, "binary");
