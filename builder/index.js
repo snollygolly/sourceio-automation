@@ -1,10 +1,13 @@
 const bluebird = require("bluebird");
 const co = require("co");
 const rp = require("request-promise");
+const md5 = require("md5");
 const fs = bluebird.promisifyAll(require("fs"));
 
 const rootPath = "http://s0urce.io/client/img/word"
 const outputPath = `${__dirname}/output`;
+
+const hashMap = require("./hash.json");
 
 const easyMod = "e";
 const mediumMod = "m";
@@ -17,7 +20,7 @@ const hardLimit = 54;
 const result = {};
 
 co(function* co(){
-	console.log("* Starting image åfetching");
+	console.log("* Starting image fetching");
 	// trying to read easy images
 	let easyCount = 0;
 	while (easyCount <= easyLimit) {
@@ -27,10 +30,10 @@ co(function* co(){
 			method: "GET",
 			encoding: null
 		});
-		result[url] = "";
 		const path = `${outputPath}/easy-${easyCount}.png`;
 		console.log(`* Writing easy image ${easyCount} to ${path}`);
 		yield fs.writeFileAsync(path, image, "binary");
+		result[url] = hashLookup(image);
 		easyCount++;
 	}
 
@@ -44,7 +47,7 @@ co(function* co(){
 		});
 		result[url] = "";
 		const path = `${outputPath}/medium-${mediumCount}.png`;
-		result[path] = "";
+		result[url] = hashLookup(image);
 		console.log(`* Writing medium image ${mediumCount} to ${path}`);
 		yield fs.writeFileAsync(path, image, "binary");
 		mediumCount++;
@@ -60,7 +63,7 @@ co(function* co(){
 		});
 		result[url] = "";
 		const path = `${outputPath}/hard-${hardCount}.png`;
-		result[path] = "";
+		result[url] = hashLookup(image);
 		console.log(`* Writing hard image ${hardCount} to ${path}`);
 		yield fs.writeFileAsync(path, image, "binary");
 		hardCount++;
@@ -71,7 +74,16 @@ co(function* co(){
 	const path = `${outputPath}/listing.json`;
 	yield fs.writeFileAsync(path, JSON.stringify(result, null, 2));
 	console.log("* Done!");
-	
+
 }).catch((err) => {
 	throw new Error (err.toString());
 });
+
+function hashLookup(image) {
+	const md5Hash = md5(image);
+	if (!hashMap[md5Hash]) {
+		console.error(`! No mapping found for ${md5Hash}`);
+		return null;
+	}
+	return hashMap[md5Hash];
+}
