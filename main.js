@@ -322,7 +322,7 @@ app = {
 
 	go: () => {
 		const wordLink = $(".tool-type-img").prop("src");
-		if (wordLink !== "http://s0urce.io/client/img/words/template.png") {
+		if (!wordLink.endsWith("s0urce.io/client/img/words/template.png")) {
 			if (listing.hasOwnProperty(wordLink) === true) {
 				const word = listing[wordLink];
 				log(`. Found word: [${word}]`);
