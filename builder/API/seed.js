@@ -8,7 +8,7 @@ config = {
 	path: "/etc/cron.d",
 	timing: "1,16,31,46 * * * *",
 	user: "ubuntu",
-    command: "/usr/bin/node /home/ubuntu/sourceio-automation/builder/index.js"
+    command: "/usr/bin/node /home/ubuntu/sourceio-automation/builder/index.js \n"
 }
 
 co(function* co() {
