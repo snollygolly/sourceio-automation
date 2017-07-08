@@ -1,7 +1,7 @@
 # sourceio-automation
 A bot to automatically play s0urce.io for you
 
-### Note: As of Beta 2.2, OCR is unreliable and the database must be MANUALLY updated.  If the DB isn't working, try generating a new one from inside the `builder` folder.
+### Note: As of Beta 2.2, OCR is unreliable.
 
 ## Configuration
 
@@ -24,13 +24,3 @@ The main file (`main.js`) contains several values you may want to change.
 * Paste in the full contents of `main.js`
 * Type `app.start()` to start the automated bot
 * If you need to stop, you can type `app.stop()`
-
-## How To Regenerate The DB
-
-> Note: You must have node.js installed for this to work
-
-* Run `npm install` from inside the `builder` folder
-* Run `node index.js` from inside the `builder` folder
-* Take `listing.json` from inside the `output` folder, and move it to `db.json` inside the root of the project.
-
-> Note: If you updated the DB because the stock version wasn't working, please create an issue or a pull request with the new DB
