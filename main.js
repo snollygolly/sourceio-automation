@@ -1,5 +1,6 @@
 let app;
-let listing = null;
+let listingURL = {};
+let listingB64 = null;
 let isAutomated = false;
 let block = false;
 let waiting = false;
@@ -59,13 +60,13 @@ let playerToAttack = 0;
 app = {
 	start: () => {
 		$.get(db).done((data) => {
-			listing = JSON.parse(data);
+			listingB64 = JSON.parse(data);
 			app.automate();
 		});
 	},
 
 	exportListing: () => {
-		log(JSON.stringify(listing, null, 2));
+		log(JSON.stringify(listingURL, null, 2));
 	},
 
 	automate: () => {
@@ -213,6 +214,9 @@ app = {
 				if (hackProgress === newHackProgress) {
 					// the bar hasn't moved
 					log("* Progress bar hasn't moved, waiting");
+					// maybe the URLs have changed
+					// the user must press "restart bot"
+					listingURL = {};
 					// TODO: make this an automatic process
 					return;
 				} else {
@@ -316,21 +320,28 @@ app = {
 		log("* Stopped loops");
 	},
 
-	exportListing: () => {
-		log(JSON.stringify(listing, null, 2));
-	},
-
 	go: () => {
 		const wordLink = $(".tool-type-img").prop("src");
 		if (wordLink !== "http://s0urce.io/client/img/words/template.png") {
-			if (listing.hasOwnProperty(wordLink) === true) {
-				const word = listing[wordLink];
+			if (listingURL.hasOwnProperty(wordLink) === true) {
+				const word = listingURL[wordLink];
 				log(`. Found word: [${word}]`);
 				app.submit(word);
 				return;
 			}
-			log("* Not seen, trying OCR...");
-			app.ocr(wordLink);
+			else {
+				toDataURL(wordLink)
+				   .then(dataUrl => {
+					const hash = dataUrl.hashCode().toString();
+					if (listingB64.hasOwnProperty(hash) === true) {
+						const word = listingB64[hash];
+						app.learn(word);
+						return;
+					}
+					log("* Not seen, trying OCR...");
+					app.ocr(wordLink);
+				});
+			}
 		}
 		else {
 			log("* Can't find the word link...");
@@ -345,7 +356,7 @@ app = {
 
 	learn: (word) => {
 		const wordLink = $(".tool-type-img").prop("src");
-		listing[wordLink] = word;
+		listingURL[wordLink] = word;
 		app.submit(word);
 	},
 
@@ -382,6 +393,28 @@ function parseHackProgress(progress) {
 function getRandomInt(min, max) {
 	return Math.floor(Math.random() * (max - min + 1)) + min;
 }
+
+String.prototype.hashCode = function() {
+	let hash = 0;
+	if (this.length == 0) {
+		return hash;
+	}
+	for (let i = 0; i < this.length; i++) {
+		let c = this.charCodeAt(i);
+		hash = ((hash<<5) - hash) + c;
+		hash = hash & hash;
+	}
+	return hash;
+}
+
+const toDataURL = url => fetch(url)
+	.then(response => response.blob())
+	.then(blob => new Promise((resolve, reject) => {
+		const reader = new FileReader();
+		reader.onloadend = () => resolve(reader.result);
+		reader.onerror = reject;
+		reader.readAsDataURL(blob);
+	}));
 
 function log(message) {
 	console.log(`:: ${message}`);
