@@ -7,7 +7,7 @@ const config = {
 
 const ns = require("node-static");
 
-var fileServer = new ns.Server("../output");
+const fileServer = new ns.Server("../output");
 
 require("http").createServer((req, res) => {
     req.addListener("end", () => {
