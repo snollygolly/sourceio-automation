@@ -1,0 +1,24 @@
+{
+  "name": "sourceio-automation",
+  "version": "1.0.0",
+  "description": "api for images",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/snollygolly/sourceio-automation.git"
+  },
+  "author": "@cynical89",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/snollygolly/sourceio-automation/issues"
+  },
+  "homepage": "https://github.com/snollygolly/sourceio-automation#readme",
+  "dependencies": {
+    "bluebird": "^3.5.0",
+    "co": "^4.6.0",
+    "node-static": "^0.7.9"
+  }
+}

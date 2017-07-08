@@ -47,7 +47,7 @@ let maxStats = {
 };
 const firewalls = ["1", "2", "3"];
 const ocrApiKey = "XXX";
-const db = "https://raw.githubusercontent.com/snollygolly/sourceio-automation/master/db.json";
+const db = "http://source.evilmousestudios.com/";
 let message = "papa bless, one love /r/javascript";
 let wordFreq = 1250;
 let mineFreq = 3000;
