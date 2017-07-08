@@ -323,9 +323,9 @@ app = {
 	go: () => {
 		const wordLink = $(".tool-type-img").prop("src");
 		if (!wordLink.endsWith("s0urce.io/client/img/words/template.png")) {
-			if (listingB64.hasOwnProperty(wordLink) === true) {
-				const word = listingB64[wordLink];
-				log(`. Found word: [${word}]`);
+			if (listingURL.hasOwnProperty(wordLink) === true) {
+				const word = listingURL[wordLink];
+				log(`. Found word (URL): [${word}]`);
 				app.submit(word);
 				return;
 			}
@@ -335,6 +335,7 @@ app = {
 					const hash = dataUrl.hashCode().toString();
 					if (listingB64.hasOwnProperty(hash) === true) {
 						const word = listingB64[hash];
+						log(`. Found word (B64): [${word}]`);
 						app.learn(word);
 						return;
 					}
