@@ -47,7 +47,7 @@ let maxStats = {
 };
 const firewalls = ["1", "2", "3"];
 const ocrApiKey = "XXX";
-const db = "http://13.59.77.3:3000/";
+const db = "http://source.evilmousestudios.com/";
 let message = "papa bless, one love /r/javascript";
 let wordFreq = 1250;
 let mineFreq = 3000;
