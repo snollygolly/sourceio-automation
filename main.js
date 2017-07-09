@@ -223,6 +223,7 @@ app = {
 					hackFails++;
 					if(hackFails >= 5) {
 						hackFails = 0;
+						log("* Progress bar is stuck, restarting");
 						app.restart();
 					}
 					return;
