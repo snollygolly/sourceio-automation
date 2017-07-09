@@ -54,6 +54,9 @@ let wordFreq = 1250;
 let mineFreq = 3000;
 let blockFreq = 5000;
 let upgradeFreq = 7500;
+let hackDelay = 15*1000;
+let maxHackFails = 10;
+let hackFails = 0;
 let minerLevel = 20;
 let playerToAttack = 0;
 
@@ -218,9 +221,16 @@ app = {
 					// the user must press "restart bot"
 					listingURL = {};
 					// TODO: make this an automatic process
+					hackFails++;
+					if(hackFails >= maxHackFails) {
+						hackFails = 0;
+						log("* Progress bar is stuck, restarting");
+						app.restart();
+					}
 					return;
 				} else {
 					// the bar has moved
+					hackFails = 0;
 					hackProgress = newHackProgress;
 					waiting = false;
 				}
@@ -300,7 +310,9 @@ app = {
 
 	restart: () => {
 		app.stop();
-		app.automate();
+		setTimeout(function() {
+			app.automate();
+		}, hackDelay);
 	},
 
 	stop: () => {
