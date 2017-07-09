@@ -222,7 +222,11 @@ app = {
 					listingURL = {};
 					// TODO: make this an automatic process
 					hackFails++;
+<<<<<<< HEAD
 					if(hackFails >= maxHackFails) {
+=======
+					if(hackFails > maxHackFails) {
+>>>>>>> dccdaad47df25c61223e94630e0418c6e2bd9605
 						hackFails = 0;
 						log("* Progress bar is stuck, restarting");
 						app.restart();
