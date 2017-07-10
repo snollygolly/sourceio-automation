@@ -1,7 +1,7 @@
 # sourceio-automation
 A bot to automatically play s0urce.io for you
 
-### Note: As of Beta 2.2, OCR is unreliable.
+### Note: As of Beta 2.2, OCR is unreliable and disabled by default
 
 ## Configuration
 
