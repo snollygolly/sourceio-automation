@@ -69,7 +69,11 @@ vars = {
 		{name: "shop-data-center", value: 0},
 		{name: "shop-bot-net", value: 0},
 		{name: "shop-quantum-server", value: 0}
-	]
+	],
+	gui: {
+		dragReady: false,
+		dragOffset: {x: 0, y: 0}
+	}
 };
 
 // eslint-disable-next-line prefer-const
@@ -372,17 +376,17 @@ gui = {
 		// make the bot window draggable
 		botWindow = ("#window-bot");
 		$(document).on("mousedown", botWindow, (e) => {
-			isDragReady = true;
-			dragOffset.x = e.pageX - $(botWindow).position().left;
-			dragOffset.y = e.pageY - $(botWindow).position().top;
+			vars.gui.dragReady = true;
+			vars.gui.dragOffset.x = e.pageX - $(botWindow).position().left;
+			vars.gui.dragOffset.y = e.pageY - $(botWindow).position().top;
 		});
 		$(document).on("mouseup", botWindow, (e) => {
-			isDragReady = false;
+			vars.gui.dragReady = false;
 		});
 		$(document).on("mousemove", (e) => {
-			if (isDragReady) {
-				$(botWindow).css("top", `${e.pageY - dragOffset.y}px`);
-				$(botWindow).css("top", `${e.pageX - dragOffset.x}px`);
+			if (vars.gui.dragReady) {
+				$(botWindow).css("top", `${e.pageY - vars.gui.dragOffset.y}px`);
+				$(botWindow).css("left", `${e.pageX - vars.gui.dragOffset.x}px`);
 			}
 		});
 	}
