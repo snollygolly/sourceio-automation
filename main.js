@@ -1,365 +1,201 @@
-let app;
-let listingURL = {};
-let listingB64 = null;
-let isAutomated = false;
-let block = false;
-let waiting = false;
-let hackProgress = 0;
-let wordLoop = null;
-let minerLoop = null;
-let upgradeLoop = null;
-let myBT = 0;
-let botWindow;
-let isDragReady = false;
-let dragOffset = {
-	x: 0,
-	y: 0
-};
-let minerStatus = [
-	{
-		name: "shop-basic-miner",
-		value: 0
-	},
-	{
-		name: "shop-advanced-miner",
-		value: 0
-	},
-	{
-		name: "shop-mining-drill",
-		value: 0
-	},
-	{
-		name: "shop-data-center",
-		value: 0
-	},
-	{
-		name: "shop-bot-net",
-		value: 0
-	},
-	{
-		name: "shop-quantum-server",
-		value: 0
-	}
-];
-let maxStats = {
-	charge: 30,
-	strength: 4,
-	regen: 10
-};
-const firewalls = ["1", "2", "3"];
-const ocrApiKey = "XXX";
-const db = "https://raw.githubusercontent.com/snollygolly/sourceio-automation/master/db.json";
-let message = "papa bless, one love /r/javascript";
-let wordFreq = 1250;
-let mineFreq = 3000;
-let blockFreq = 5000;
-let upgradeFreq = 7500;
-let hackDelay = 15*1000;
-let maxHackFails = 10;
-let hackFails = 0;
-let minerLevel = 20;
-let playerToAttack = 0;
+// eslint-disable-next-line prefer-const, one-var
+let config, vars, app, loops, gui;
 
+// eslint-disable-next-line prefer-const
+config = {
+	// the message you send to others when you hack them
+	message: "papa bless, it's everyday bro /r/javascript",
+	// the base64 database url
+	db: "https://raw.githubusercontent.com/snollygolly/sourceio-automation/master/db.json",
+	// all things timing related
+	freq: {
+		// how often to guess
+		word: 1500,
+		// how often to attempt to upgrade mining tools
+		mine: 3000,
+		// how often to attempt to upgrade firewalls
+		upgrade: 4500,
+		// how long to wait before attempting to rehack, not enough money for hack
+		broke: 6000,
+		// how long to wait before restarting the hacking loop
+		hack: 3500
+	},
+	// which player in the index of the list, 0 is the first player
+	playerToAttack: 0,
+	// how many hacks to try (and fail) before restarting
+	maxHackFailures: 5,
+	// how high to upgrade all of your miner types
+	maxMinerLevel: 20,
+	// all the gui settings
+	gui: {
+		enabled: true,
+		width: "320px",
+		height: "350px"
+	},
+	// all the ocr settings, disabled by default
+	ocr: {
+		enabled: false,
+		url: "http://api.ocr.space/parse/image",
+		key: "XXX"
+	}
+};
+
+// eslint-disable-next-line prefer-const
+vars = {
+	// the object that contains a mapping of image urls to words (built over time)
+	listingURL: {},
+	// the object that contains b64 hashes to words (loaded on start)
+	listingB64: {},
+	// how much BT you have
+	balance: 0,
+	flags: {
+		// we're waiting for OCR to complete
+		ocrBlock: false,
+		// we're waiting for the bar to move in response to our word
+		progressBlock: false
+	},
+	loops: {
+		word: null,
+		upgrade: null,
+		miner: null
+	},
+	hackProgress: 0,
+	hackFailures: 0,
+	// the different types of miners and their current rank
+	minerStatus: [
+		{name: "shop-basic-miner", value: 0},
+		{name: "shop-advanced-miner", value: 0},
+		{name: "shop-mining-drill", value: 0},
+		{name: "shop-data-center", value: 0},
+		{name: "shop-bot-net", value: 0},
+		{name: "shop-quantum-server", value: 0}
+	]
+};
+
+// eslint-disable-next-line prefer-const
 app = {
 	start: () => {
-		$.get(db).done((data) => {
-			listingB64 = JSON.parse(data);
+		$.get(config.db).done((data) => {
+			vars.listingB64 = JSON.parse(data);
+			// first check the windows are open, and open them if they aren't
+			if ($("#player-list").is(":visible") === false) {
+				log("* Target list must be open");
+				$("#desktop-list").children("img").click();
+			}
+			if ($("#window-shop").is(":visible") === false) {
+				log("* Black market must be open");
+				$("#desktop-shop").children("img").click();
+				$("#desktop-miner").children("img").click();
+			}
+			if ($("#window-computer").is(":visible") === false) {
+				log("* My computer must be open");
+				$("#desktop-computer").children("img").click();
+			}
+			if (config.gui.enabled === true) {
+				if ($("#window-bot").is(":visible") === false) {
+					log("* Opening bot window");
+					gui.show();
+				}
+			} else {
+				log("* GUI disabled, skipping...");
+			}
+			// start the automation
 			app.automate();
 		});
 	},
 
-	exportListing: () => {
-		log(JSON.stringify(listingURL, null, 2));
-	},
-
-	automate: () => {
-		// first check the windows are open, and open them if they aren't
-		if ($("#player-list").is(":visible") === false) {
-			log("* Target list must be open");
-			$("#desktop-list").children("img").click();
-		}
-		if ($("#window-shop").is(":visible") === false) {
-			log("* Black market must be open");
-			$("#desktop-shop").children("img").click();
-			$("#desktop-miner").children("img").click();
-		}
-		if ($("#window-computer").is(":visible") === false) {
-			log("* My computer must be open");
-			$("#desktop-computer").children("img").click();
-		}
-		if ($("#window-bot").is(":visible") === false) {
-			log("* Opening bot window");
-			app.gui();
-		}
-		isAutomated = true;
-		// start by getting the first target in the list
-		const targetName = $("#player-list").children("tr").eq(playerToAttack)[0].innerText;
-		log(`. Now attacking ${targetName}`);
-		// click it, and then hack, and then port b
-		$("#player-list").children("tr").eq(playerToAttack)[0].click();
-		$("#window-other-button").click();
-		// do a check for money
-		const portStyle = $(`#window-other-port${firewalls[0]}`).attr("style");
-		if (portStyle.indexOf("opacity: 1") === -1) {
-			// this port costs too much, let's wait a bit
-			log("* Hack too expensive, waiting");
-			setTimeout(app.automate, blockFreq);
-			return;
-		}
-		const portNumber = getRandomInt(1,3);
-		$(`#window-other-port${portNumber}`).click();
-		// handle upgrades
-		app.loops.upgrade();
-		// start the loop that does the guessing
-		//wordLoop = setInterval(app.loops.word, wordFreq);
-		wordLoop = setInterval(app.loops.word, wordFreq);
-		// start the loop for btc monitoring
-		minerLoop = setInterval(app.loops.miner, mineFreq);
-		// start the loop for upgrades
-		//upgradeLoop = setInterval(app.loops.upgrade, upgradeFreq);
-	},
-
-	gui: () => {
-        //check if bot window has been appended already
-        if ($("#window-bot").length > 0) {
-            $("#window-bot").show();
-        }
-        else {
-            //Change windowWidth and windowHeight to change the bot's window size
-            let windowWidth = "320px";
-            let windowHeight = "350px";
-            let botHTML =
-            "<div id='window-bot' class='window' style='" +
-			"border-color:rgb(77, 100, 122);" +
-			"color:rgb(191, 207, 210);" +
-			"height:" + windowHeight +
-			";width:" + windowWidth +
-			";z-index:10;" +
-			"top:363px;" +
-			"left:914px'>" +
-                "<div id='bot-title' class='window-title' style='background-color: rgb(77, 100, 122)'>Source.io Bot" +
-                    "<span class='window-close-style'>" +
-                        "<img class='window-close-img' src='http://s0urce.io/client/img/icon-close.png'>" +
-                    "</span>" +
-                    "</div>" +
-                    "<div class='window-content' style='width:" + windowWidth + ";height:"+windowHeight + "'>" +
-                        "<div id='restart-button' class='button' style='display: block; margin-bottom: 15px'>Restart Bot</div>" +
-                        "<div id='stop-button' class='button' style='display: block; margin-bottom: 15px'>Stop Bot</div>" +
-						"<span style='font-size:18px'>Hack speed:" +
-							"<input type='text' id='hack-speed-input' class='input-form' onkeypress='return event.charCode >= 48 && event.charCode <= 57' style='width:50px;margin:0px 0px 15px 5px' value=" + wordFreq +
-							"><span>(ms)</span>" +
-						"</span>" +
-                        "<div id='github-button' class='button' style='display: block; margin-top: 50%'>This script is on Github!</div>" +
-                    "</div>" +
-                "</div>" +
-            "</div>";
-
-            $(".window-wrapper").append(botHTML);
-
-            //bind functions to the gui's buttons
-            $("#bot-title > span.window-close-style").on("click", () => {
-                $("#window-bot").hide();
-            });
-
-            $("#restart-button").on("click", () => {
-                app.restart();
-            });
-
-            $("#stop-button").on("click", () => {
-                app.stop();
-            });
-
-            $("#github-button").on("click", () => {
-                window.open("https://github.com/snollygolly/sourceio-automation")
-            });
-
-			$("#hack-speed-input").change(() => {
-				wordFreq = $("#hack-speed-input").val();
-			});
-            //make the bot window draggable
-            botWindow = ("#window-bot");
-
-            $(document).on("mousedown", botWindow, (e) => {
-                isDragReady = true;
-                dragOffset.x = e.pageX - $(botWindow).position().left;
-                dragOffset.y = e.pageY - $(botWindow).position().top;
-            });
-
-            $(document).on("mouseup", botWindow, (e) => {
-                isDragReady = false;
-            });
-
-            $(document).on("mousemove", (e) => {
-                if (isDragReady) {
-                    $(botWindow).css("top", (e.pageY - dragOffset.y) + "px");
-                    $(botWindow).css("left", (e.pageX - dragOffset.x) + "px");
-                }
-            });
-        }
-    },
-
-	loops: {
-		word: () => {
-			if (block === true) {
-				return;
-			}
-			if ($("#targetmessage-input").is(":visible") === true) {
-				// we're done!
-				$("#targetmessage-input").val(message);
-				$("#targetmessage-button-send").click();
-				app.restart();
-				return;
-			}
-			// if we're waiting on the progress bar to move...
-			if (waiting === true) {
-				const newHackProgress = parseHackProgress($("#progressbar-firewall-amount").attr("style"));
-				// check to see if it's new
-				if (hackProgress === newHackProgress) {
-					// the bar hasn't moved
-					log("* Progress bar hasn't moved, waiting");
-					// maybe the URLs have changed
-					// the user must press "restart bot"
-					listingURL = {};
-					// TODO: make this an automatic process
-					hackFails++;
-					if(hackFails >= maxHackFails) {
-						hackFails = 0;
-						log("* Progress bar is stuck, restarting");
-						app.restart();
-					}
-					return;
-				} else {
-					// the bar has moved
-					hackFails = 0;
-					hackProgress = newHackProgress;
-					waiting = false;
-				}
-			}
-			// actually do the word stuff
-			waiting = true;
-			app.go();
-		},
-		miner: () => {
-			// first, get the status of our miners
-			for (const miner of minerStatus) {
-				// set value
-				miner.value = parseInt($(`#${miner.name}-amount`).text());
-				// this is available to buy
-				if ($(`#${miner.name}`).attr("style") === "opacity: 1;") {
-					if (miner.value < minerLevel) {
-						// we should buy this
-						$(`#${miner.name}`).click();
-					}
-				}
-			}
-		},
-		upgrade: () => {
-			myBT = parseInt($("#window-my-coinamount").text());
-			// if the back button is visible, we're on a page, let's back out
-			if ($("#window-firewall-pagebutton").is(":visible") === true) {
-				$("#window-firewall-pagebutton").click();
-			}
-			// take it off the top
-			const firewall = firewalls.shift()
-			firewalls.push(firewall);
-			// select the firewall
-			log(`. Handling upgrades to firewall ${firewall}`);
-			$(`#window-firewall-part${firewall}`).click();
-			// get stats
-			const stats = {
-				charge: parseInt($("#shop-max-charges").text()),
-				strength: parseInt($("#shop-strength").text()),
-				regen: parseInt($("#shop-regen").text()),
-			};
-			// start checking prices, start with strength
-			if (stats.strength < maxStats.strength) {
-				log(". Strength isn't maxed");
-				const strengthPrice = parseInt($("#shop-firewall-difficulty-value").text());
-				if (strengthPrice < myBT) {
-					log(". Buying strength");
-					$("#shop-firewall-difficulty").click();
-					return;
-				}
-			}
-			// check max charges
-			if (stats.charge < maxStats.charge) {
-				log(". Charge isn't maxed");
-				const chargePrice = parseInt($("#shop-firewall-max_charge10-value").text());
-				if (chargePrice < myBT) {
-					$("#shop-firewall-max_charge10").click();
-					log(". Buying charge");
-					return;
-				}
-			}
-			// check regen
-			if (stats.regen < maxStats.regen) {
-				log(". Regen isn't maxed");
-				const regenPrice = parseInt($("#shop-firewall-regen-value").text());
-				if (regenPrice < myBT) {
-					$("#shop-firewall-regen").click();
-					log(". Buying regen");
-					return;
-				}
-			}
-			// nothing matched, let's go back
-			if ($("#window-firewall-pagebutton").is(":visible") === true) {
-				$("#window-firewall-pagebutton").click();
-			}
-		},
-	},
-
 	restart: () => {
 		app.stop();
-		setTimeout(function() {
+		log(". Waiting for restart...");
+		setTimeout(() => {
+			log(". Restarting!");
 			app.automate();
-		}, hackDelay);
+		}, config.freq.hack);
 	},
 
 	stop: () => {
-		if (wordLoop === null && minerLoop === null && upgradeLoop === null) {
-			log("! No loops to stop");
-			return;
+		// check and disable all loops
+		for (const loop in vars.loops) {
+			if (vars.loops[loop] === null) {
+				log(`! Can't stop ${loop} loop`);
+				continue;
+			}
+			clearInterval(vars.loops[loop]);
+			vars.loops[loop] = null;
 		}
-		isAutomated = false;
-		block = false;
-		waiting = false;
-		clearInterval(wordLoop);
-		wordLoop = null;
-		clearInterval(minerLoop);
-		minerLoop = null;
-		clearInterval(upgradeLoop);
-		upgradeLoop = null;
-		log("* Stopped loops");
+		// reset flags
+		vars.flags.ocrBlock = false;
+		vars.flags.progressBlock = false;
+		log("* Stopped all hacking");
 	},
 
-	go: () => {
+	automate: () => {
+		// does everything to prep for hacking except word guessing
+		app.attack();
+		// start the loop for btc monitoring
+		vars.loops.miner = setInterval(loops.miner, config.freq.mine);
+		// start the loop for upgrades
+		vars.loops.upgrade = setInterval(loops.upgrade, config.freq.upgrade);
+	},
+
+	attack: () => {
+		// playerToAttack is an int, the index of the player list
+		const targetName = $("#player-list").children("tr").eq(config.playerToAttack)[0].innerText;
+		log(`. Now attacking ${targetName}`);
+		// click it, and then hack, and then a random port
+		$("#player-list").children("tr").eq(config.playerToAttack)[0].click();
+		$("#window-other-button").click();
+		const portNumber = getRandomInt(1,3);
+		// do a check for money
+		const portStyle = $(`#window-other-port${portNumber}`).attr("style");
+		if (portStyle.indexOf("opacity: 1") === -1) {
+			// this port costs too much, let's wait a bit
+			log("* Hack too expensive, waiting");
+			setTimeout(app.attack, config.freq.broke);
+			return;
+		}
+		$(`#window-other-port${portNumber}`).click();
+		vars.loops.word = setInterval(loops.word, config.freq.word);
+	},
+
+	findWord: () => {
 		const wordLink = $(".tool-type-img").prop("src");
 		if (!wordLink.endsWith("s0urce.io/client/img/words/template.png")) {
-			if (listingURL.hasOwnProperty(wordLink) === true) {
-				const word = listingURL[wordLink];
+			if (vars.listingURL.hasOwnProperty(wordLink) === true) {
+				const word = vars.listingURL[wordLink];
 				log(`. Found word (URL): [${word}]`);
 				app.submit(word);
 				return;
 			}
-			else {
-				toDataURL(wordLink)
-				   .then(dataUrl => {
-					const hash = dataUrl.hashCode().toString();
-					if (listingB64.hasOwnProperty(hash) === true) {
-						const word = listingB64[hash];
-						log(`. Found word (B64): [${word}]`);
-						app.learn(word);
-						return;
-					}
+			toDataURL(wordLink).then((dataUrl) => {
+				const hash = getHashCode(dataUrl);
+				if (vars.listingB64.hasOwnProperty(hash) === true) {
+					const word = vars.listingB64[hash];
+					log(`. Found word (B64): [${word}]`);
+					app.learn(word);
+					return;
+				}
+				if (config.ocr.enabled === true) {
 					log("* Not seen, trying OCR...");
-					app.ocr(wordLink);
-				});
-			}
-		}
-		else {
+					app.doOCR(config.ocr.url, {
+						apikey: config.ocr.key,
+						language: "eng",
+						url: wordLink
+					});
+				} else {
+					log("* OCR disabled, skipping...");
+				}
+			});
+		} else {
 			log("* Can't find the word link...");
 			app.restart();
 		}
+	},
+
+	learn: (word) => {
+		const wordLink = $(".tool-type-img").prop("src");
+		vars.listingURL[wordLink] = word;
+		app.submit(word);
 	},
 
 	submit: (word) => {
@@ -367,27 +203,16 @@ app = {
 		$("#tool-type-word").submit();
 	},
 
-	learn: (word) => {
-		const wordLink = $(".tool-type-img").prop("src");
-		listingURL[wordLink] = word;
-		app.submit(word);
-	},
-
-	ocr: (url) => {
-		block = true;
-		$.post("http://api.ocr.space/parse/image", {
-			apikey: ocrApiKey,
-			language: "eng",
-			url: url
-		}).done((data) => {
+	doOCR: (link, payload) => {
+		vars.flags.ocrBlock = true;
+		// this is made somewhat generic to allow different ocr vendors
+		$.post(link, payload).done((data) => {
 			const word = String(data["ParsedResults"][0]["ParsedText"]).trim().toLowerCase().split(" ").join("");
 			if (word.length > 2) {
 				log(`. Got data: [${word}]`);
 				$("#tool-type-word").val(word);
-				if (isAutomated === true) {
-					app.learn(word);
-					block = false;
-				}
+				app.learn(word);
+				vars.flags.ocrBlock = false;
 			} else {
 				log("* OCR failed");
 				app.restart();
@@ -395,6 +220,174 @@ app = {
 		});
 	}
 };
+
+loops = {
+	word: () => {
+		// block is true is we're mid-OCR
+		if (vars.flags.ocrBlock === true) {
+			return;
+		}
+		if ($("#targetmessage-input").is(":visible") === true) {
+			// we're done!
+			$("#targetmessage-input").val(config.message);
+			$("#targetmessage-button-send").click();
+			app.restart();
+			return;
+		}
+		// if we're waiting on the progress bar to move...
+		if (vars.flags.progressBlock === true) {
+			const newHackProgress = parseHackProgress($("#progressbar-firewall-amount").attr("style"));
+			// check to see if it's new
+			if (vars.hackProgress === newHackProgress) {
+				// the bar hasn't moved
+				log("* Progress bar hasn't moved, waiting");
+				// maybe the URLs have changed
+				// the user must press "restart bot"
+				vars.listingURL = {};
+				vars.hackFails++;
+				if (vars.hackFails >= config.maxHackFails) {
+					vars.hackFails = 0;
+					log("* Progress bar is stuck, restarting");
+					app.restart();
+				}
+				return;
+			}
+			// the bar has moved
+			vars.hackFails = 0;
+			vars.hackProgress = newHackProgress;
+			vars.flags.progressBlock = false;
+		}
+		// actually do the word stuff
+		vars.flags.progressBlock = true;
+		app.findWord();
+	},
+
+	miner: () => {
+		// first, get the status of our miners
+		for (const miner of vars.minerStatus) {
+			// set value
+			miner.value = parseInt($(`#${miner.name}-amount`).text());
+			// this is available to buy
+			if ($(`#${miner.name}`).attr("style") === "opacity: 1;") {
+				if (miner.value < config.maxMinerLevel) {
+					// we should buy this
+					$(`#${miner.name}`).click();
+				}
+			}
+		}
+	},
+
+	upgrade: () => {
+		vars.balance = parseInt($("#window-my-coinamount").text());
+		// if the back button is visible, we're on a page, let's back out
+		if ($("#window-firewall-pagebutton").is(":visible") === true) {
+			$("#window-firewall-pagebutton").click();
+		}
+		// just get a random port, because who cares
+		const firewall = getRandomInt(1,3);
+		// select the firewall
+		log(`. Handling upgrades to firewall ${firewall}`);
+		$(`#window-firewall-part${firewall}`).click();
+		// get stats
+		const stats = {
+			charge: parseInt($("#shop-max-charges").text()),
+			strength: parseInt($("#shop-strength").text()),
+			regen: parseInt($("#shop-regen").text())
+		};
+		const statLookup = {
+			charge: "max_charge10",
+			strength: "difficulty",
+			regen: "regen"
+		};
+		const maxStats = {
+			charge: 30,
+			strength: 4,
+			regen: 10
+		};
+
+		for (const stat in stats) {
+			if (stats[stat] < maxStats[stat]) {
+				const statPrice = parseInt($(`#shop-firewall-${statLookup[stat]}-value`).text());
+				if (statPrice < vars.balance) {
+					log(`. Buying ${stat}`);
+					$(`#shop-firewall-${statLookup[stat]}`).click();
+					return;
+				}
+			}
+		}
+		// nothing matched, let's go back
+		if ($("#window-firewall-pagebutton").is(":visible") === true) {
+			$("#window-firewall-pagebutton").click();
+		}
+	}
+};
+
+gui = {
+	show: () => {
+		if ($("#window-bot").length > 0) {
+			$("#window-bot").show();
+		}
+		const botWindowHTML = `
+		<div id="window-bot" class="window" style="border-color: rgb(62, 76, 95); color: rgb(191, 207, 210); height: ${config.gui.height}; width: ${config.gui.width}; z-index: 10; top: 363px; left: 914px;">
+			<div id="bot-title" class="window-title" style="background-color: rgb(62, 76, 95);">
+				Source.io Bot
+				<span class="window-close-style">
+					<img class="window-close-img" src="http://s0urce.io/client/img/icon-close.png">
+				</span>
+			</div>
+			<div class="window-content" style="width:${config.gui.width};height:${config.gui.height}">
+				<div id="restart-button" class="button" style="display: block; margin-bottom: 15px">
+					Restart Bot
+				</div>
+				<div id="stop-button" class="button" style="display: block; margin-bottom: 15px">
+					Stop Bot
+				</div>
+				<span style="font-size:18px">
+					Hack speed:
+					<input type="text" id="hack-speed-input" class="input-form" onkeypress="return event.charCode >= 48 &amp;&amp; event.charCode <= 57" style="width:50px;margin:0px 0px 15px 5px" value="${config.freq.word}">
+					<span>(ms)</span>
+				</span>
+				<div id="github-button" class="button" style="display: block; margin-top: 50%">
+					This script is on Github!
+				</div>
+			</div>
+		</div>`;
+		$(".window-wrapper").append(botWindowHTML);
+		// bind functions to the gui's buttons
+		$("#bot-title > span.window-close-style").on("click", () => {
+			$("#window-bot").hide();
+		});
+		$("#restart-button").on("click", () => {
+			app.restart();
+		});
+		$("#stop-button").on("click", () => {
+			app.stop();
+		});
+		$("#github-button").on("click", () => {
+			window.open("https://github.com/snollygolly/sourceio-automation");
+		});
+		$("#hack-speed-input").change(() => {
+			wordFreq = $("#hack-speed-input").val();
+		});
+		// make the bot window draggable
+		botWindow = ("#window-bot");
+		$(document).on("mousedown", botWindow, (e) => {
+			isDragReady = true;
+			dragOffset.x = e.pageX - $(botWindow).position().left;
+			dragOffset.y = e.pageY - $(botWindow).position().top;
+		});
+		$(document).on("mouseup", botWindow, (e) => {
+			isDragReady = false;
+		});
+		$(document).on("mousemove", (e) => {
+			if (isDragReady) {
+				$(botWindow).css("top", `${e.pageY - dragOffset.y}px`);
+				$(botWindow).css("top", `${e.pageX - dragOffset.x}px`);
+			}
+		});
+	}
+};
+
 
 function parseHackProgress(progress) {
 	// remove the %;
@@ -407,27 +400,29 @@ function getRandomInt(min, max) {
 	return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
-String.prototype.hashCode = function() {
+function getHashCode(data) {
 	let hash = 0;
-	if (this.length == 0) {
+	if (data.length === 0) {
 		return hash;
 	}
-	for (let i = 0; i < this.length; i++) {
-		let c = this.charCodeAt(i);
-		hash = ((hash<<5) - hash) + c;
-		hash = hash & hash;
+	for (let i = 0; i < data.length; i++) {
+		const c = data.charCodeAt(i);
+		hash = ((hash << 5) - hash) + c;
+		hash &= hash;
 	}
-	return hash;
+	return hash.toString();
 }
 
-const toDataURL = url => fetch(url)
-	.then(response => response.blob())
-	.then(blob => new Promise((resolve, reject) => {
-		const reader = new FileReader();
-		reader.onloadend = () => resolve(reader.result);
-		reader.onerror = reject;
-		reader.readAsDataURL(blob);
-	}));
+function toDataURL(url) {
+	return fetch(url)
+		.then(response => response.blob())
+		.then(blob => new Promise((resolve, reject) => {
+			const reader = new FileReader();
+			reader.onloadend = () => resolve(reader.result);
+			reader.onerror = reject;
+			reader.readAsDataURL(blob);
+		}));
+}
 
 function log(message) {
 	console.log(`:: ${message}`);

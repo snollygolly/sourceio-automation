@@ -1,0 +1,22 @@
+{
+  "name": "sourceio-automation",
+  "version": "2.0.0",
+  "description": "A bot to play s0urce.io for you",
+  "main": "main.js",
+  "scripts": {
+    "test": "./node_modules/.bin/eslint ."
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/snollygolly/sourceio-automation.git"
+  },
+  "author": "@snollygolly",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/snollygolly/sourceio-automation/issues"
+  },
+  "homepage": "https://github.com/snollygolly/sourceio-automation#readme",
+  "dependencies": {
+    "eslint": "^4.2.0"
+  }
+}

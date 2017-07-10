@@ -1,16 +1,6 @@
 {
   "env": {
-    "node": true,
-    "es6": true,
-    "mocha": true
-  },
-
-  "ecmaFeatures": {
-    "generators": true,
-    "blockBindings": true,
-    "templateStrings": true,
-    "arrowFunctions": true,
-    "forOf": true,
+    "es6": true
   },
 
   "rules": {
