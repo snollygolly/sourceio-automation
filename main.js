@@ -96,7 +96,7 @@ app = {
 				$("#desktop-computer").children("img").click();
 			}
 			if (config.gui.enabled === true) {
-				if ($("#window-bot").is(":visible") === false) {
+				if ($("#custom-gui").is(":visible") === false) {
 					log("* Opening bot window");
 					gui.show();
 				}
@@ -328,53 +328,74 @@ loops = {
 
 gui = {
 	show: () => {
-		if ($("#window-bot").length > 0) {
-			$("#window-bot").show();
+		if ($("#custom-gui").length > 0) {
+			$("#custom-gui").show();
 		}
+		const sizeCSS = `height: ${config.gui.height}; width: ${config.gui.width};`;
+		const labelMap = {
+			word: "Word Speed",
+			mine: "Miner Upgrade",
+			upgrade: "Firewall Upgrade",
+			hack: "Hack Wait"
+		};
+		const freqInput = (type) => {
+			return `<span style="font-size:18px">
+				${labelMap[type]}:
+				<input type="text" class="custom-gui-freq input-form" style="width:50px;margin:0px 0px 15px 5px;border:" value="${config.freq[type]}" data-type="${type}">
+				<span>(ms)</span>
+			</span>`;
+		};
 		const botWindowHTML = `
-		<div id="window-bot" class="window" style="border-color: rgb(62, 76, 95); color: rgb(191, 207, 210); height: ${config.gui.height}; width: ${config.gui.width}; z-index: 10; top: 363px; left: 914px;">
-			<div id="bot-title" class="window-title" style="background-color: rgb(62, 76, 95);">
+		<div id="custom-gui" class="window" style="border-color: rgb(62, 76, 95); color: rgb(191, 207, 210); ${sizeCSS} z-index: 10; top: 363px; left: 914px;">
+			<div id="custom-gui-bot-title" class="window-title" style="background-color: rgb(62, 76, 95);">
 				Source.io Bot
 				<span class="window-close-style">
 					<img class="window-close-img" src="http://s0urce.io/client/img/icon-close.png">
 				</span>
 			</div>
-			<div class="window-content" style="width:${config.gui.width};height:${config.gui.height}">
-				<div id="restart-button" class="button" style="display: block; margin-bottom: 15px">
+			<div class="window-content" style="${sizeCSS}">
+				<div id="custom-restart-button" class="button" style="display: block; margin-bottom: 15px">
 					Restart Bot
 				</div>
-				<div id="stop-button" class="button" style="display: block; margin-bottom: 15px">
+				<div id="custom-stop-button" class="button" style="display: block; margin-bottom: 15px">
 					Stop Bot
 				</div>
-				<span style="font-size:18px">
-					Hack speed:
-					<input type="text" id="hack-speed-input" class="input-form" onkeypress="return event.charCode >= 48 &amp;&amp; event.charCode <= 57" style="width:50px;margin:0px 0px 15px 5px" value="${config.freq.word}">
-					<span>(ms)</span>
-				</span>
-				<div id="github-button" class="button" style="display: block; margin-top: 50%">
+				${freqInput("word")}
+				${freqInput("mine")}
+				${freqInput("hack")}
+				<div id="custom-github-button" class="button" style="display: block; margin-top: 50%">
 					This script is on Github!
 				</div>
 			</div>
 		</div>`;
 		$(".window-wrapper").append(botWindowHTML);
 		// bind functions to the gui's buttons
-		$("#bot-title > span.window-close-style").on("click", () => {
-			$("#window-bot").hide();
+		$("#custom-gui-bot-title > span.window-close-style").on("click", () => {
+			$("#custom-gui").hide();
 		});
-		$("#restart-button").on("click", () => {
+		$("#custom-restart-button").on("click", () => {
 			app.restart();
 		});
-		$("#stop-button").on("click", () => {
+		$("#custom-stop-button").on("click", () => {
 			app.stop();
 		});
-		$("#github-button").on("click", () => {
+		$("#custom-github-button").on("click", () => {
 			window.open("https://github.com/snollygolly/sourceio-automation");
 		});
-		$("#hack-speed-input").change(() => {
-			config.freq.word = $("#hack-speed-input").val();
+		$(".custom-gui-freq").on("keypress", (e) => {
+			if (e.keyCode !== 13) {
+				return;
+			}
+			const type = $(e.target).attr("data-type");
+			if (!config.freq[type]) {
+				// invalid input, disregard i guess?
+				return;
+			}
+			config.freq[type] = $(e.target).val();
+			log(`* Frequency for '${type}' set to ${config.freq[type]}`);
 		});
 		// make the bot window draggable
-		botWindow = ("#window-bot");
+		botWindow = ("#custom-gui");
 		$(document).on("mousedown", botWindow, (e) => {
 			vars.gui.dragReady = true;
 			vars.gui.dragOffset.x = e.pageX - $(botWindow).position().left;
