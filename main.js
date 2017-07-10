@@ -23,7 +23,7 @@ config = {
 	// which player in the index of the list, 0 is the first player
 	playerToAttack: 0,
 	// how many hacks to try (and fail) before restarting
-	maxHackFailures: 5,
+	maxHackFails: 5,
 	// how high to upgrade all of your miner types
 	maxMinerLevel: 20,
 	// all the gui settings
