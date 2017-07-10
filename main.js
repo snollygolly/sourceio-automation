@@ -371,7 +371,7 @@ gui = {
 			window.open("https://github.com/snollygolly/sourceio-automation");
 		});
 		$("#hack-speed-input").change(() => {
-			wordFreq = $("#hack-speed-input").val();
+			config.freq.word = $("#hack-speed-input").val();
 		});
 		// make the bot window draggable
 		botWindow = ("#window-bot");
