@@ -245,13 +245,12 @@ loops = {
 			if (vars.hackProgress === newHackProgress) {
 				// the bar hasn't moved
 				log("* Progress bar hasn't moved, waiting");
-				// maybe the URLs have changed
-				// the user must press "restart bot"
-				vars.listingURL = {};
 				vars.hackFails++;
 				if (vars.hackFails >= config.maxHackFails) {
 					vars.hackFails = 0;
 					log("* Progress bar is stuck, restarting");
+					// maybe the URLs have changed
+					vars.listingURL = {};
 					app.restart();
 				}
 				return;
