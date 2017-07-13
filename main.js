@@ -363,7 +363,7 @@ gui = {
 				${freqInput("word")}
 				${freqInput("mine")}
 				${freqInput("hack")}
-				<div id="custom-github-button" class="button" style="display: block; margin-top: 50%">
+				<div id="custom-github-button" class="button" style="display: block; margin-top: 20%">
 					This script is on Github!
 				</div>
 			</div>
