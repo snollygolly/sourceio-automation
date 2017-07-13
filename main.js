@@ -20,8 +20,6 @@ config = {
 		// how long to wait before restarting the hacking loop
 		hack: 3500
 	},
-	// which player in the index of the list, 0 is the first player
-	playerToAttack: 0,
 	// how many hacks to try (and fail) before restarting
 	maxHackFails: 5,
 	// how high to upgrade all of your miner types
@@ -144,11 +142,12 @@ app = {
 	},
 
 	attack: () => {
-		// playerToAttack is an int, the index of the player list
-		const targetName = $("#player-list").children("tr").eq(config.playerToAttack)[0].innerText;
+		const targetsList = $(".window-list-table-select");
+		const targetToAttack = targetsList[getRandomInt(0, targetsList.length - 1)];
+		const targetName = targetToAttack.innerText;
 		log(`. Now attacking ${targetName}`);
 		// click it, and then hack, and then a random port
-		$("#player-list").children("tr").eq(config.playerToAttack)[0].click();
+		targetToAttack.click();
 		$("#window-other-button").click();
 		const portNumber = getRandomInt(1,3);
 		// do a check for money
