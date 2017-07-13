@@ -127,6 +127,7 @@ app = {
 			clearInterval(vars.loops[loop]);
 			vars.loops[loop] = null;
 		}
+		vars.hackProgress = 0;
 		// reset flags
 		vars.flags.ocrBlock = false;
 		vars.flags.progressBlock = false;
