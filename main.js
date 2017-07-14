@@ -20,8 +20,6 @@ config = {
 		// how long to wait before restarting the hacking loop
 		hack: 3500
 	},
-	// which player in the index of the list, 0 is the first player
-	playerToAttack: 0,
 	// how many hacks to try (and fail) before restarting
 	maxHackFails: 5,
 	// how high to upgrade all of your miner types
@@ -127,6 +125,7 @@ app = {
 			clearInterval(vars.loops[loop]);
 			vars.loops[loop] = null;
 		}
+		vars.hackProgress = 0;
 		// reset flags
 		vars.flags.ocrBlock = false;
 		vars.flags.progressBlock = false;
@@ -143,11 +142,12 @@ app = {
 	},
 
 	attack: () => {
-		// playerToAttack is an int, the index of the player list
-		const targetName = $("#player-list").children("tr").eq(config.playerToAttack)[0].innerText;
+		const targetsList = $(".window-list-table-select");
+		const targetToAttack = targetsList[getRandomInt(0, targetsList.length - 1)];
+		const targetName = targetToAttack.innerText;
 		log(`. Now attacking ${targetName}`);
 		// click it, and then hack, and then a random port
-		$("#player-list").children("tr").eq(config.playerToAttack)[0].click();
+		targetToAttack.click();
 		$("#window-other-button").click();
 		const portNumber = getRandomInt(1,3);
 		// do a check for money
@@ -245,13 +245,12 @@ loops = {
 			if (vars.hackProgress === newHackProgress) {
 				// the bar hasn't moved
 				log("* Progress bar hasn't moved, waiting");
-				// maybe the URLs have changed
-				// the user must press "restart bot"
-				vars.listingURL = {};
 				vars.hackFails++;
 				if (vars.hackFails >= config.maxHackFails) {
 					vars.hackFails = 0;
 					log("* Progress bar is stuck, restarting");
+					// maybe the URLs have changed
+					vars.listingURL = {};
 					app.restart();
 				}
 				return;
@@ -363,7 +362,7 @@ gui = {
 				${freqInput("word")}
 				${freqInput("mine")}
 				${freqInput("hack")}
-				<div id="custom-github-button" class="button" style="display: block; margin-top: 50%">
+				<div id="custom-github-button" class="button" style="display: block; margin-top: 20%">
 					This script is on Github!
 				</div>
 			</div>
