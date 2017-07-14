@@ -5,8 +5,8 @@ let config, vars, app, loops, gui;
 config = {
 	// the message you send to others when you hack them
 	message: "papa bless, it's everyday bro /r/javascript",
-	autotarget: true,
-	autoattack: true,
+	autoTarget: true,
+	autoAttack: true,
 	// the base64 database url
 	db: "https://raw.githubusercontent.com/snollygolly/sourceio-automation/master/db.json",
 	// all things timing related
@@ -29,7 +29,9 @@ config = {
 	// how high to upgrade all of your miner types except quantum-servers and botnets.
 	maxMinerLevel: 20,
 	// how high to upgrade quantum-servers and botnets (quantum-servers will always be purchased in priority and botnets quantity will be equal to quantum-servers quantity.
-	maxQBLevel: 45,
+	maxQBLevel: 50,
+	// the max BTC the bot will spend per upgrade. (current BTC * maxUpgradeCost).
+	maxUpgradeCost: .33,
 	// all the gui settings
 	gui: {
 		enabled: true,
@@ -160,19 +162,19 @@ app = {
 	attack: () => {
 		
 		// if the auto target is toggled, choose the target.
-		if (config.autotarget)
+		if (config.autoTarget)
 		{
 		// with playerToAttack = 0 choose between the 4 first players from the player list
-			const RndTarget = getRandomInt(config.playerToAttack, config.playerToAttack + 3);
+			const rndTarget = getRandomInt(config.playerToAttack, config.playerToAttack + 3);
 			// playerToAttack is an int, the index of the player list
-			const targetName = $("#player-list").children("tr").eq(RndTarget)[0].innerText;
+			const targetName = $("#player-list").children("tr").eq(rndTarget)[0].innerText;
 			log(`. Now attacking ${targetName}`);
 			// click it, and then hack, and then a random port
-			$("#player-list").children("tr").eq(RndTarget)[0].click();
+			$("#player-list").children("tr").eq(rndTarget)[0].click();
 			$("#window-other-button").click();
 		}
 		// if the auto attack port is toggled, choose the port and click
-		if (config.autoattack)
+		if (config.autoAttack)
 		{
 			const portNumber = getRandomInt(1,3);
 			// do a check for money
@@ -219,10 +221,10 @@ app = {
 			});
 		} else {
 			log("* Can't find the word link...");
-			// if the target is disconnected and autotarget disabled, re-enable it.
-			if ($("#cdm-text-container span:last").text() === "Target is disconnected from the Server." && !config.autotarget)
+			// if the target is disconnected and autoTarget disabled, re-enable it.
+			if ($("#cdm-text-container span:last").text() === "Target is disconnected from the Server." && !config.autoTarget)
 			{
-				$("#custom-autotarget-button").click();
+				$("#custom-autoTarget-button").click();
 			}
 			app.restart();
 		}
@@ -317,6 +319,7 @@ loops = {
 		// leave if all firewalls are upgraded to max
 		if (!vars.fireWall[3].needUpgrade)
 			return;
+		// get a random firewall
 		const i = getRandomInt(1,3);
 		// if this fireWall is already fully upgraded, get an other random firewall.
 		if (!vars.fireWall[i - 1].needUpgrade)
@@ -328,8 +331,7 @@ loops = {
 			$("#window-firewall-pagebutton").click();
 		}
 
-		// just get a random port, because who cares
-		// select the firewall
+		// click on the firewall
 		log(`. Handling upgrades to firewall ${vars.fireWall[i].name}`);
 		$(`#window-firewall-part${i}`).click();
 		// get stats
@@ -346,7 +348,7 @@ loops = {
 		for (const stat in maxStats) {
 			if (stats[stat] < maxStats[stat]) {
 				const statPrice = parseInt($(`#shop-firewall-${statLookup[stat]}-value`).text());
-				if (statPrice < (vars.balance / 3)) {
+				if (statPrice < (vars.balance * config.maxUpgradeCost)) {
 					log(`. Buying: ${$(".window-shop-element-info b").eq(stat).text()}`);
 					$(`#shop-firewall-${statLookup[stat]}`).click();
 					// buy more than one upgrade, but only if they cost less than a third of the bitcoin balance.
@@ -405,10 +407,10 @@ gui = {
 				<div id="custom-stop-button" class="button" style="display: block; margin-bottom: 15px">
 					Stop Bot
 				</div>
-				<div id="custom-autotarget-button" class="button" style="display: block; margin-bottom: 15px">
+				<div id="custom-autoTarget-button" class="button" style="display: block; margin-bottom: 15px">
 					Target Auto
 				</div>
-				<div id="custom-autoattack-button" class="button" style="display: block; margin-bottom: 15px">
+				<div id="custom-autoAttack-button" class="button" style="display: block; margin-bottom: 15px">
 					Port Attack Auto
 				</div>
 				<span>Message to victim:</span>
@@ -426,8 +428,8 @@ gui = {
 		</div>`;
 		$(".window-wrapper").append(botWindowHTML);
 		// color the toggle buttons
-		$("#custom-autotarget-button").css("color", config.autotarget ? "green" : "red");
-		$("#custom-autoattack-button").css("color", config.autoattack ? "green" : "red");
+		$("#custom-autoTarget-button").css("color", config.autoTarget ? "green" : "red");
+		$("#custom-autoAttack-button").css("color", config.autoAttack ? "green" : "red");
 		// bind functions to the gui's buttons
 		$("#custom-gui-bot-title > span.window-close-style").on("click", () => {
 			$("#custom-gui").hide();
@@ -438,13 +440,13 @@ gui = {
 		$("#custom-stop-button").on("click", () => {
 			app.stop();
 		});
-		$("#custom-autotarget-button").on("click", () => {
-			config.autotarget = !config.autotarget;
-			$("#custom-autotarget-button").css("color", config.autotarget ? "green" : "red");
+		$("#custom-autoTarget-button").on("click", () => {
+			config.autoTarget = !config.autoTarget;
+			$("#custom-autoTarget-button").css("color", config.autoTarget ? "green" : "red");
 		});
-		$("#custom-autoattack-button").on("click", () => {
-			config.autoattack = !config.autoattack;
-			$("#custom-autoattack-button").css("color", config.autoattack ? "green" : "red");
+		$("#custom-autoAttack-button").on("click", () => {
+			config.autoAttack = !config.autoAttack;
+			$("#custom-autoAttack-button").css("color", config.autoAttack ? "green" : "red");
 		});
 		$("#custom-github-button").on("click", () => {
 			window.open("https://github.com/snollygolly/sourceio-automation");
