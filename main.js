@@ -77,9 +77,9 @@ vars = {
 		{name: "shop-quantum-server", value: 0}
 	],
 	fireWall: [
-		{name: "A", needUpgrade: true},
-		{name: "B", needUpgrade: true},
-		{name: "C", needUpgrade: true},
+		{name: "A", index: 1, needUpgrade: true},
+		{name: "B", index: 2, needUpgrade: true},
+		{name: "C", index: 3, needUpgrade: true},
 		{name: "ALL", needUpgrade: true}
 	],
 	gui: {
@@ -115,10 +115,6 @@ app = {
 			} else {
 				log("* GUI disabled, skipping...");
 			}
-			// somehow i couldn't make the first .click() work on the firewall, so ask the player to manually click on a firewall. Uses the tutorial arrow.
-			$(".tutorial-arrow.tutorial-arrow-right").height(170);
-			$(".tutorial-arrow.tutorial-arrow-right").eq(0).html("Please click on any firewall <br><br><br><br><br> else the bot won't upgrade them.");
-			$("#tutorial-firewall").css("display","");
 			// start the automation
 			app.automate();
 		});
@@ -160,10 +156,9 @@ app = {
 	},
 
 	attack: () => {
-		
+
 		// if the auto target is toggled, choose the target.
-		if (config.autoTarget)
-		{
+		if (config.autoTarget) {
 		// with playerToAttack = 0 choose between the 4 first players from the player list
 			const rndTarget = getRandomInt(config.playerToAttack, config.playerToAttack + 3);
 			// playerToAttack is an int, the index of the player list
@@ -174,8 +169,7 @@ app = {
 			$("#window-other-button").click();
 		}
 		// if the auto attack port is toggled, choose the port and click
-		if (config.autoAttack)
-		{
+		if (config.autoAttack) {
 			const portNumber = getRandomInt(1,3);
 			// do a check for money
 			const portStyle = $(`#window-other-port${portNumber}`).attr("style");
@@ -187,10 +181,10 @@ app = {
 			}
 			$(`#window-other-port${portNumber}`).click();
 		}
-		
+
 		vars.loops.word = setInterval(loops.word, config.freq.word);
 	},
-	
+
 	findWord: () => {
 		const wordLink = $(".tool-type-img").prop("src");
 		if (!wordLink.endsWith("s0urce.io/client/img/words/template.png")) {
@@ -222,8 +216,7 @@ app = {
 		} else {
 			log("* Can't find the word link...");
 			// if the target is disconnected and autoTarget disabled, re-enable it.
-			if ($("#cdm-text-container span:last").text() === "Target is disconnected from the Server." && !config.autoTarget)
-			{
+			if ($("#cdm-text-container span:last").text() === "Target is disconnected from the Server." && !config.autoTarget) {
 				$("#custom-autoTarget-button").click();
 			}
 			app.restart();
@@ -320,9 +313,12 @@ loops = {
 		if (!vars.fireWall[3].needUpgrade)
 			return;
 		// get a random firewall
-		const i = getRandomInt(1,3);
+		// i refers to the location in the vars.firewall array
+		const i = getRandomInt(0,2);
+		// index refers to 1,2,3, the index in the DOM (use for selectors)
+		const index = vars.fireWall[i].index;
 		// if this fireWall is already fully upgraded, get an other random firewall.
-		if (!vars.fireWall[i - 1].needUpgrade)
+		if (!vars.fireWall[i].needUpgrade)
 			vars.loops.upgrade();
 		vars.balance = parseInt($("#window-my-coinamount").text());
 		// if the back button is visible, we're on a page, let's back out and hide the firewall warning.
@@ -333,7 +329,7 @@ loops = {
 
 		// click on the firewall
 		log(`. Handling upgrades to firewall ${vars.fireWall[i].name}`);
-		$(`#window-firewall-part${i}`).click();
+		$(`#window-firewall-part${index}`).click();
 		// get stats
 		const stats = [
 			parseInt($("#shop-max-charges").text()), parseInt($("#shop-strength").text()), parseInt($("#shop-regen").text())
@@ -354,13 +350,10 @@ loops = {
 					// buy more than one upgrade, but only if they cost less than a third of the bitcoin balance.
 					// return;
 				}
-			}
-			else
-			{
+			} else {
 				maxUpgradeCount++;
-				if (maxUpgradeCount === 3)
-				{
-					vars.fireWall[i - 1].needUpgrade = false;
+				if (maxUpgradeCount === 3) {
+					vars.fireWall[i].needUpgrade = false;
 					if (vars.fireWall.every(checkFirewallsUpgrades))
 						vars.fireWall[3].needUpgrade = false;
 				}
