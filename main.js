@@ -300,10 +300,18 @@ loops = {
 			// this is available to buy
 			if ($(`#${miner.name}`).attr("style") === "opacity: 1;") {
 				// buy more quantum servers and botnets, buy botnets at the same rate as the quantum servers.
-				if (miner.value < config.maxMinerLevel || (miner.name === "shop-quantum-server" || miner.name === "shop-bot-net" && miner.value < vars.minerStatus[5].value) && miner.value < config.maxQBLevel) {
-					// we should buy this
-					$(`#${miner.name}`).click();
+				if (miner.value >= config.maxQBLevel) {
+					// we're beyond or at the max QB level, no updates needed
+					continue;
 				}
+				// is this an advanced miner?
+				const isAdvancedMiner = (miner.name === "shop-quantum-server" || miner.name === "shop-bot-net") ? true : false;
+				if (miner.value >= config.maxMinerLevel && isAdvancedMiner === false) {
+					// this isn't an advanced miner and it's beyond the max level, no updates needed
+					continue;
+				}
+				// we should buy this
+				$(`#${miner.name}`).click();
 			}
 		}
 	},
