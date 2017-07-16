@@ -40,5 +40,6 @@
     "generator-star-spacing": [2, "after"],
     "no-confusing-arrow": 2,
     "no-const-assign": 2,
+    "brace-style": 1
   }
 }

@@ -5,6 +5,8 @@ let config, vars, app, loops, gui;
 config = {
 	// the message you send to others when you hack them
 	message: "papa bless, it's everyday bro /r/javascript",
+	autoTarget: true,
+	autoAttack: true,
 	// the base64 database url
 	db: "https://raw.githubusercontent.com/snollygolly/sourceio-automation/master/db.json",
 	// all things timing related
@@ -20,17 +22,21 @@ config = {
 		// how long to wait before restarting the hacking loop
 		hack: 3500
 	},
-	// which player in the index of the list, 0 is the first player
+	// which player in the index of the list, 0 is the first player (the bot target a player with index between playerToAttack and playerToAttack + 3 (random).
 	playerToAttack: 0,
 	// how many hacks to try (and fail) before restarting
 	maxHackFails: 5,
-	// how high to upgrade all of your miner types
+	// how high to upgrade all of your miner types except quantum-servers and botnets.
 	maxMinerLevel: 20,
+	// how high to upgrade quantum-servers and botnets (quantum-servers will always be purchased in priority and botnets quantity will be equal to quantum-servers quantity.
+	maxQBLevel: 50,
+	// the max BTC the bot will spend per upgrade. (current BTC * maxUpgradeCost).
+	maxUpgradeCost: .33,
 	// all the gui settings
 	gui: {
 		enabled: true,
 		width: "320px",
-		height: "350px"
+		height: "412px"
 	},
 	// all the ocr settings, disabled by default
 	ocr: {
@@ -69,6 +75,12 @@ vars = {
 		{name: "shop-data-center", value: 0},
 		{name: "shop-bot-net", value: 0},
 		{name: "shop-quantum-server", value: 0}
+	],
+	fireWall: [
+		{name: "A", index: 1, needUpgrade: true},
+		{name: "B", index: 2, needUpgrade: true},
+		{name: "C", index: 3, needUpgrade: true},
+		{name: "ALL", needUpgrade: true}
 	],
 	gui: {
 		dragReady: false,
@@ -127,6 +139,7 @@ app = {
 			clearInterval(vars.loops[loop]);
 			vars.loops[loop] = null;
 		}
+		vars.hackProgress = 0;
 		// reset flags
 		vars.flags.ocrBlock = false;
 		vars.flags.progressBlock = false;
@@ -143,22 +156,32 @@ app = {
 	},
 
 	attack: () => {
-		// playerToAttack is an int, the index of the player list
-		const targetName = $("#player-list").children("tr").eq(config.playerToAttack)[0].innerText;
-		log(`. Now attacking ${targetName}`);
-		// click it, and then hack, and then a random port
-		$("#player-list").children("tr").eq(config.playerToAttack)[0].click();
-		$("#window-other-button").click();
-		const portNumber = getRandomInt(1,3);
-		// do a check for money
-		const portStyle = $(`#window-other-port${portNumber}`).attr("style");
-		if (portStyle.indexOf("opacity: 1") === -1) {
-			// this port costs too much, let's wait a bit
-			log("* Hack too expensive, waiting");
-			setTimeout(app.attack, config.freq.broke);
-			return;
+
+		// if the auto target is toggled, choose the target.
+		if (config.autoTarget) {
+		// with playerToAttack = 0 choose between the 4 first players from the player list
+			const rndTarget = getRandomInt(config.playerToAttack, config.playerToAttack + 3);
+			// playerToAttack is an int, the index of the player list
+			const targetName = $("#player-list").children("tr").eq(rndTarget)[0].innerText;
+			log(`. Now attacking ${targetName}`);
+			// click it, and then hack, and then a random port
+			$("#player-list").children("tr").eq(rndTarget)[0].click();
+			$("#window-other-button").click();
 		}
-		$(`#window-other-port${portNumber}`).click();
+		// if the auto attack port is toggled, choose the port and click
+		if (config.autoAttack) {
+			const portNumber = getRandomInt(1,3);
+			// do a check for money
+			const portStyle = $(`#window-other-port${portNumber}`).attr("style");
+			if (portStyle.indexOf("opacity: 1") === -1) {
+			// this port costs too much, let's wait a bit
+				log("* Hack too expensive, waiting");
+				setTimeout(app.attack, config.freq.broke);
+				return;
+			}
+			$(`#window-other-port${portNumber}`).click();
+		}
+
 		vars.loops.word = setInterval(loops.word, config.freq.word);
 	},
 
@@ -192,6 +215,10 @@ app = {
 			});
 		} else {
 			log("* Can't find the word link...");
+			// if the target is disconnected and autoTarget disabled, re-enable it.
+			if ($("#cdm-text-container span:last").text() === "Target is disconnected from the Server." && !config.autoTarget) {
+				$("#custom-autoTarget-button").click();
+			}
 			app.restart();
 		}
 	},
@@ -245,13 +272,12 @@ loops = {
 			if (vars.hackProgress === newHackProgress) {
 				// the bar hasn't moved
 				log("* Progress bar hasn't moved, waiting");
-				// maybe the URLs have changed
-				// the user must press "restart bot"
-				vars.listingURL = {};
 				vars.hackFails++;
 				if (vars.hackFails >= config.maxHackFails) {
 					vars.hackFails = 0;
 					log("* Progress bar is stuck, restarting");
+					// maybe the URLs have changed
+					vars.listingURL = {};
 					app.restart();
 				}
 				return;
@@ -273,53 +299,75 @@ loops = {
 			miner.value = parseInt($(`#${miner.name}-amount`).text());
 			// this is available to buy
 			if ($(`#${miner.name}`).attr("style") === "opacity: 1;") {
-				if (miner.value < config.maxMinerLevel) {
-					// we should buy this
-					$(`#${miner.name}`).click();
+				// buy more quantum servers and botnets, buy botnets at the same rate as the quantum servers.
+				if (miner.value >= config.maxQBLevel) {
+					// we're beyond or at the max QB level, no updates needed
+					continue;
 				}
+				// is this an advanced miner?
+				const isAdvancedMiner = (miner.name === "shop-quantum-server" || miner.name === "shop-bot-net") ? true : false;
+				if (miner.value >= config.maxMinerLevel && isAdvancedMiner === false) {
+					// this isn't an advanced miner and it's beyond the max level, no updates needed
+					continue;
+				}
+				// we should buy this
+				$(`#${miner.name}`).click();
 			}
 		}
 	},
 
 	upgrade: () => {
+		// leave if all firewalls are upgraded to max
+		if (!vars.fireWall[3].needUpgrade)
+			return;
+		// get a random firewall
+		// i refers to the location in the vars.firewall array
+		const i = getRandomInt(0,2);
+		// index refers to 1,2,3, the index in the DOM (use for selectors)
+		const index = vars.fireWall[i].index;
+		// if this fireWall is already fully upgraded, get an other random firewall.
+		if (!vars.fireWall[i].needUpgrade)
+			vars.loops.upgrade();
 		vars.balance = parseInt($("#window-my-coinamount").text());
-		// if the back button is visible, we're on a page, let's back out
+		// if the back button is visible, we're on a page, let's back out and hide the firewall warning.
 		if ($("#window-firewall-pagebutton").is(":visible") === true) {
+			$("#tutorial-firewall").css("display","none");
 			$("#window-firewall-pagebutton").click();
 		}
-		// just get a random port, because who cares
-		const firewall = getRandomInt(1,3);
-		// select the firewall
-		log(`. Handling upgrades to firewall ${firewall}`);
-		$(`#window-firewall-part${firewall}`).click();
-		// get stats
-		const stats = {
-			charge: parseInt($("#shop-max-charges").text()),
-			strength: parseInt($("#shop-strength").text()),
-			regen: parseInt($("#shop-regen").text())
-		};
-		const statLookup = {
-			charge: "max_charge10",
-			strength: "difficulty",
-			regen: "regen"
-		};
-		const maxStats = {
-			charge: 30,
-			strength: 4,
-			regen: 10
-		};
 
-		for (const stat in stats) {
+		// click on the firewall
+		log(`. Handling upgrades to firewall ${vars.fireWall[i].name}`);
+		$(`#window-firewall-part${index}`).click();
+		// get stats
+		const stats = [
+			parseInt($("#shop-max-charges").text()), parseInt($("#shop-strength").text()), parseInt($("#shop-regen").text())
+		];
+		const statLookup = [
+			"max_charge10", "difficulty", "regen"
+		];
+		const maxStats = [
+			30, 4, 10
+		];
+		let maxUpgradeCount = 0;
+		for (const stat in maxStats) {
 			if (stats[stat] < maxStats[stat]) {
 				const statPrice = parseInt($(`#shop-firewall-${statLookup[stat]}-value`).text());
-				if (statPrice < vars.balance) {
-					log(`. Buying ${stat}`);
+				if (statPrice < (vars.balance * config.maxUpgradeCost)) {
+					log(`. Buying: ${$(".window-shop-element-info b").eq(stat).text()}`);
 					$(`#shop-firewall-${statLookup[stat]}`).click();
-					return;
+					// buy more than one upgrade, but only if they cost less than a third of the bitcoin balance.
+					// return;
+				}
+			} else {
+				maxUpgradeCount++;
+				if (maxUpgradeCount === 3) {
+					vars.fireWall[i].needUpgrade = false;
+					if (vars.fireWall.every(checkFirewallsUpgrades))
+						vars.fireWall[3].needUpgrade = false;
 				}
 			}
 		}
-		// nothing matched, let's go back
+		// let's go back
 		if ($("#window-firewall-pagebutton").is(":visible") === true) {
 			$("#window-firewall-pagebutton").click();
 		}
@@ -339,14 +387,14 @@ gui = {
 			hack: "Hack Wait"
 		};
 		const freqInput = (type) => {
-			return `<span style="font-size:18px">
+			return `<span style="font-size:15px">
 				${labelMap[type]}:
 				<input type="text" class="custom-gui-freq input-form" style="width:50px;margin:0px 0px 15px 5px;border:" value="${config.freq[type]}" data-type="${type}">
-				<span>(ms)</span>
+				<span>(ms)</span><br>
 			</span>`;
 		};
 		const botWindowHTML = `
-		<div id="custom-gui" class="window" style="border-color: rgb(62, 76, 95); color: rgb(191, 207, 210); ${sizeCSS} z-index: 10; top: 363px; left: 914px;">
+		<div id="custom-gui" class="window" style="border-color: rgb(62, 76, 95); color: rgb(191, 207, 210); ${sizeCSS} z-index: 10; top: 11.5%; left: 83%;">
 			<div id="custom-gui-bot-title" class="window-title" style="background-color: rgb(62, 76, 95);">
 				Source.io Bot
 				<span class="window-close-style">
@@ -360,15 +408,29 @@ gui = {
 				<div id="custom-stop-button" class="button" style="display: block; margin-bottom: 15px">
 					Stop Bot
 				</div>
+				<div id="custom-autoTarget-button" class="button" style="display: block; margin-bottom: 15px">
+					Target Auto
+				</div>
+				<div id="custom-autoAttack-button" class="button" style="display: block; margin-bottom: 15px">
+					Port Attack Auto
+				</div>
+				<span>Message to victim:</span>
+				<br>
+				<input type="text" class="custom-gui-msg input-form" style="width:250px;height:30px;border:;background:lightgrey;color:black" value="${config.message}" >
+				<br><br>
 				${freqInput("word")}
 				${freqInput("mine")}
+				${freqInput("upgrade")}
 				${freqInput("hack")}
-				<div id="custom-github-button" class="button" style="display: block; margin-top: 50%">
+				<div id="custom-github-button" class="button" style="display: block;">
 					This script is on Github!
 				</div>
 			</div>
 		</div>`;
 		$(".window-wrapper").append(botWindowHTML);
+		// color the toggle buttons
+		$("#custom-autoTarget-button").css("color", config.autoTarget ? "green" : "red");
+		$("#custom-autoAttack-button").css("color", config.autoAttack ? "green" : "red");
 		// bind functions to the gui's buttons
 		$("#custom-gui-bot-title > span.window-close-style").on("click", () => {
 			$("#custom-gui").hide();
@@ -378,6 +440,14 @@ gui = {
 		});
 		$("#custom-stop-button").on("click", () => {
 			app.stop();
+		});
+		$("#custom-autoTarget-button").on("click", () => {
+			config.autoTarget = !config.autoTarget;
+			$("#custom-autoTarget-button").css("color", config.autoTarget ? "green" : "red");
+		});
+		$("#custom-autoAttack-button").on("click", () => {
+			config.autoAttack = !config.autoAttack;
+			$("#custom-autoAttack-button").css("color", config.autoAttack ? "green" : "red");
 		});
 		$("#custom-github-button").on("click", () => {
 			window.open("https://github.com/snollygolly/sourceio-automation");
@@ -394,14 +464,21 @@ gui = {
 			config.freq[type] = $(e.target).val();
 			log(`* Frequency for '${type}' set to ${config.freq[type]}`);
 		});
+		$(".custom-gui-msg").on("keypress", (e) => {
+			if (e.keyCode !== 13) {
+				return;
+			}
+			config.message = $(e.target).val();
+			log(`* Message for  set to : ${config.message}`);
+		});
 		// make the bot window draggable
-		botWindow = ("#custom-gui");
+		const botWindow = ("#custom-gui");
 		$(document).on("mousedown", botWindow, (e) => {
 			vars.gui.dragReady = true;
 			vars.gui.dragOffset.x = e.pageX - $(botWindow).position().left;
 			vars.gui.dragOffset.y = e.pageY - $(botWindow).position().top;
 		});
-		$(document).on("mouseup", botWindow, (e) => {
+		$(document).on("mouseup", botWindow, () => {
 			vars.gui.dragReady = false;
 		});
 		$(document).on("mousemove", (e) => {
@@ -413,6 +490,11 @@ gui = {
 	}
 };
 
+function checkFirewallsUpgrades(FW, index) {
+	if (index === 3)
+		return true;
+	return FW.needUpgrade === false;
+}
 
 function parseHackProgress(progress) {
 	// remove the %;
