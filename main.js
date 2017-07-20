@@ -69,22 +69,22 @@ vars = {
 	hackFailures: 0,
 	// the different types of miners and their current rank
 	minerStatus: [
-		{name: "shop-basic-miner", value: 0},
-		{name: "shop-advanced-miner", value: 0},
-		{name: "shop-mining-drill", value: 0},
-		{name: "shop-data-center", value: 0},
-		{name: "shop-bot-net", value: 0},
-		{name: "shop-quantum-server", value: 0}
+		{ name: "shop-basic-miner", value: 0 },
+		{ name: "shop-advanced-miner", value: 0 },
+		{ name: "shop-mining-drill", value: 0 },
+		{ name: "shop-data-center", value: 0 },
+		{ name: "shop-bot-net", value: 0 },
+		{ name: "shop-quantum-server", value: 0 }
 	],
 	fireWall: [
-		{name: "A", index: 1, needUpgrade: true},
-		{name: "B", index: 2, needUpgrade: true},
-		{name: "C", index: 3, needUpgrade: true},
-		{name: "ALL", needUpgrade: true}
+		{ name: "A", index: 1, needUpgrade: true },
+		{ name: "B", index: 2, needUpgrade: true },
+		{ name: "C", index: 3, needUpgrade: true },
+		{ name: "ALL", needUpgrade: true }
 	],
 	gui: {
 		dragReady: false,
-		dragOffset: {x: 0, y: 0}
+		dragOffset: { x: 0, y: 0 }
 	}
 };
 
@@ -159,7 +159,7 @@ app = {
 
 		// if the auto target is toggled, choose the target.
 		if (config.autoTarget) {
-		// with playerToAttack = 0 choose between the 4 first players from the player list
+			// with playerToAttack = 0 choose between the 4 first players from the player list
 			const rndTarget = getRandomInt(config.playerToAttack, config.playerToAttack + 3);
 			// playerToAttack is an int, the index of the player list
 			const targetName = $("#player-list").children("tr").eq(rndTarget)[0].innerText;
@@ -170,11 +170,11 @@ app = {
 		}
 		// if the auto attack port is toggled, choose the port and click
 		if (config.autoAttack) {
-			const portNumber = getRandomInt(1,3);
+			const portNumber = getRandomInt(1, 3);
 			// do a check for money
 			const portStyle = $(`#window-other-port${portNumber}`).attr("style");
 			if (portStyle.indexOf("opacity: 1") === -1) {
-			// this port costs too much, let's wait a bit
+				// this port costs too much, let's wait a bit
 				log("* Hack too expensive, waiting");
 				setTimeout(app.attack, config.freq.broke);
 				return;
@@ -322,7 +322,7 @@ loops = {
 			return;
 		// get a random firewall
 		// i refers to the location in the vars.firewall array
-		const i = getRandomInt(0,2);
+		const i = getRandomInt(0, 2);
 		// index refers to 1,2,3, the index in the DOM (use for selectors)
 		const index = vars.fireWall[i].index;
 		// if this fireWall is already fully upgraded, get an other random firewall.
@@ -331,7 +331,7 @@ loops = {
 		vars.balance = parseInt($("#window-my-coinamount").text());
 		// if the back button is visible, we're on a page, let's back out and hide the firewall warning.
 		if ($("#window-firewall-pagebutton").is(":visible") === true) {
-			$("#tutorial-firewall").css("display","none");
+			$("#tutorial-firewall").css("display", "none");
 			$("#window-firewall-pagebutton").click();
 		}
 
@@ -378,22 +378,22 @@ gui = {
 	show: () => {
 		if ($("#custom-gui").length > 0) {
 			$("#custom-gui").show();
-		}
-		const sizeCSS = `height: ${config.gui.height}; width: ${config.gui.width};`;
-		const labelMap = {
-			word: "Word Speed",
-			mine: "Miner Upgrade",
-			upgrade: "Firewall Upgrade",
-			hack: "Hack Wait"
-		};
-		const freqInput = (type) => {
-			return `<span style="font-size:15px">
+		} else {
+			const sizeCSS = `height: ${config.gui.height}; width: ${config.gui.width};`;
+			const labelMap = {
+				word: "Word Speed",
+				mine: "Miner Upgrade",
+				upgrade: "Firewall Upgrade",
+				hack: "Hack Wait"
+			};
+			const freqInput = (type) => {
+				return `<span style="font-size:15px">
 				${labelMap[type]}:
 				<input type="text" class="custom-gui-freq input-form" style="width:50px;margin:0px 0px 15px 5px;border:" value="${config.freq[type]}" data-type="${type}">
 				<span>(ms)</span><br>
 			</span>`;
-		};
-		const botWindowHTML = `
+			};
+			const botWindowHTML = `
 		<div id="custom-gui" class="window" style="border-color: rgb(62, 76, 95); color: rgb(191, 207, 210); ${sizeCSS} z-index: 10; top: 11.5%; left: 83%;">
 			<div id="custom-gui-bot-title" class="window-title" style="background-color: rgb(62, 76, 95);">
 				Source.io Bot
@@ -427,66 +427,67 @@ gui = {
 				</div>
 			</div>
 		</div>`;
-		$(".window-wrapper").append(botWindowHTML);
-		// color the toggle buttons
-		$("#custom-autoTarget-button").css("color", config.autoTarget ? "green" : "red");
-		$("#custom-autoAttack-button").css("color", config.autoAttack ? "green" : "red");
-		// bind functions to the gui's buttons
-		$("#custom-gui-bot-title > span.window-close-style").on("click", () => {
-			$("#custom-gui").hide();
-		});
-		$("#custom-restart-button").on("click", () => {
-			app.restart();
-		});
-		$("#custom-stop-button").on("click", () => {
-			app.stop();
-		});
-		$("#custom-autoTarget-button").on("click", () => {
-			config.autoTarget = !config.autoTarget;
+			$(".window-wrapper").append(botWindowHTML);
+			// color the toggle buttons
 			$("#custom-autoTarget-button").css("color", config.autoTarget ? "green" : "red");
-		});
-		$("#custom-autoAttack-button").on("click", () => {
-			config.autoAttack = !config.autoAttack;
 			$("#custom-autoAttack-button").css("color", config.autoAttack ? "green" : "red");
-		});
-		$("#custom-github-button").on("click", () => {
-			window.open("https://github.com/snollygolly/sourceio-automation");
-		});
-		$(".custom-gui-freq").on("keypress", (e) => {
-			if (e.keyCode !== 13) {
-				return;
-			}
-			const type = $(e.target).attr("data-type");
-			if (!config.freq[type]) {
-				// invalid input, disregard i guess?
-				return;
-			}
-			config.freq[type] = $(e.target).val();
-			log(`* Frequency for '${type}' set to ${config.freq[type]}`);
-		});
-		$(".custom-gui-msg").on("keypress", (e) => {
-			if (e.keyCode !== 13) {
-				return;
-			}
-			config.message = $(e.target).val();
-			log(`* Message for  set to : ${config.message}`);
-		});
-		// make the bot window draggable
-		const botWindow = ("#custom-gui");
-		$(document).on("mousedown", botWindow, (e) => {
-			vars.gui.dragReady = true;
-			vars.gui.dragOffset.x = e.pageX - $(botWindow).position().left;
-			vars.gui.dragOffset.y = e.pageY - $(botWindow).position().top;
-		});
-		$(document).on("mouseup", botWindow, () => {
-			vars.gui.dragReady = false;
-		});
-		$(document).on("mousemove", (e) => {
-			if (vars.gui.dragReady) {
-				$(botWindow).css("top", `${e.pageY - vars.gui.dragOffset.y}px`);
-				$(botWindow).css("left", `${e.pageX - vars.gui.dragOffset.x}px`);
-			}
-		});
+			// bind functions to the gui's buttons
+			$("#custom-gui-bot-title > span.window-close-style").on("click", () => {
+				$("#custom-gui").hide();
+			});
+			$("#custom-restart-button").on("click", () => {
+				app.restart();
+			});
+			$("#custom-stop-button").on("click", () => {
+				app.stop();
+			});
+			$("#custom-autoTarget-button").on("click", () => {
+				config.autoTarget = !config.autoTarget;
+				$("#custom-autoTarget-button").css("color", config.autoTarget ? "green" : "red");
+			});
+			$("#custom-autoAttack-button").on("click", () => {
+				config.autoAttack = !config.autoAttack;
+				$("#custom-autoAttack-button").css("color", config.autoAttack ? "green" : "red");
+			});
+			$("#custom-github-button").on("click", () => {
+				window.open("https://github.com/snollygolly/sourceio-automation");
+			});
+			$(".custom-gui-freq").on("keypress", (e) => {
+				if (e.keyCode !== 13) {
+					return;
+				}
+				const type = $(e.target).attr("data-type");
+				if (!config.freq[type]) {
+					// invalid input, disregard i guess?
+					return;
+				}
+				config.freq[type] = $(e.target).val();
+				log(`* Frequency for '${type}' set to ${config.freq[type]}`);
+			});
+			$(".custom-gui-msg").on("keypress", (e) => {
+				if (e.keyCode !== 13) {
+					return;
+				}
+				config.message = $(e.target).val();
+				log(`* Message for  set to : ${config.message}`);
+			});
+			// make the bot window draggable
+			const botWindow = ("#custom-gui");
+			$(document).on("mousedown", botWindow, (e) => {
+				vars.gui.dragReady = true;
+				vars.gui.dragOffset.x = e.pageX - $(botWindow).position().left;
+				vars.gui.dragOffset.y = e.pageY - $(botWindow).position().top;
+			});
+			$(document).on("mouseup", botWindow, () => {
+				vars.gui.dragReady = false;
+			});
+			$(document).on("mousemove", (e) => {
+				if (vars.gui.dragReady) {
+					$(botWindow).css("top", `${e.pageY - vars.gui.dragOffset.y}px`);
+					$(botWindow).css("left", `${e.pageX - vars.gui.dragOffset.x}px`);
+				}
+			});
+		}
 	}
 };
 
