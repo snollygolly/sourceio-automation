@@ -108,8 +108,10 @@ app = {
 				$("#desktop-computer").children("img").click();
 			}
 			if (config.gui.enabled === true) {
-				if ($("#custom-gui").is(":visible") === false) {
-					log("* Opening bot window");
+				log("* Opening bot window");
+				if ($("#custom-gui").length > 0) {
+					$("#custom-gui").show();
+				} else {
 					gui.show();
 				}
 			} else {
@@ -149,10 +151,14 @@ app = {
 	automate: () => {
 		// does everything to prep for hacking except word guessing
 		app.attack();
-		// start the loop for btc monitoring
-		vars.loops.miner = setInterval(loops.miner, config.freq.mine);
-		// start the loop for upgrades
-		vars.loops.upgrade = setInterval(loops.upgrade, config.freq.upgrade);
+		if (vars.loops.miner === null) {
+			// start the loop for btc monitoring
+			vars.loops.miner = setInterval(loops.miner, config.freq.mine);
+		}
+		if (vars.loops.upgrade === null) {
+			// start the loop for upgrades
+			vars.loops.upgrade = setInterval(loops.upgrade, config.freq.upgrade);
+		}
 	},
 
 	attack: () => {
@@ -181,8 +187,9 @@ app = {
 			}
 			$(`#window-other-port${portNumber}`).click();
 		}
-
-		vars.loops.word = setInterval(loops.word, config.freq.word);
+		if (vars.loops.word === null) {
+			vars.loops.word = setInterval(loops.word, config.freq.word);
+		}
 	},
 
 	findWord: () => {
@@ -376,24 +383,21 @@ loops = {
 
 gui = {
 	show: () => {
-		if ($("#custom-gui").length > 0) {
-			$("#custom-gui").show();
-		} else {
-			const sizeCSS = `height: ${config.gui.height}; width: ${config.gui.width};`;
-			const labelMap = {
-				word: "Word Speed",
-				mine: "Miner Upgrade",
-				upgrade: "Firewall Upgrade",
-				hack: "Hack Wait"
-			};
-			const freqInput = (type) => {
-				return `<span style="font-size:15px">
+		const sizeCSS = `height: ${config.gui.height}; width: ${config.gui.width};`;
+		const labelMap = {
+			word: "Word Speed",
+			mine: "Miner Upgrade",
+			upgrade: "Firewall Upgrade",
+			hack: "Hack Wait"
+		};
+		const freqInput = (type) => {
+			return `<span style="font-size:15px">
 				${labelMap[type]}:
 				<input type="text" class="custom-gui-freq input-form" style="width:50px;margin:0px 0px 15px 5px;border:" value="${config.freq[type]}" data-type="${type}">
 				<span>(ms)</span><br>
 			</span>`;
-			};
-			const botWindowHTML = `
+		};
+		const botWindowHTML = `
 		<div id="custom-gui" class="window" style="border-color: rgb(62, 76, 95); color: rgb(191, 207, 210); ${sizeCSS} z-index: 10; top: 11.5%; left: 83%;">
 			<div id="custom-gui-bot-title" class="window-title" style="background-color: rgb(62, 76, 95);">
 				Source.io Bot
@@ -427,67 +431,66 @@ gui = {
 				</div>
 			</div>
 		</div>`;
-			$(".window-wrapper").append(botWindowHTML);
-			// color the toggle buttons
+		$(".window-wrapper").append(botWindowHTML);
+		// color the toggle buttons
+		$("#custom-autoTarget-button").css("color", config.autoTarget ? "green" : "red");
+		$("#custom-autoAttack-button").css("color", config.autoAttack ? "green" : "red");
+		// bind functions to the gui's buttons
+		$("#custom-gui-bot-title > span.window-close-style").on("click", () => {
+			$("#custom-gui").hide();
+		});
+		$("#custom-restart-button").on("click", () => {
+			app.restart();
+		});
+		$("#custom-stop-button").on("click", () => {
+			app.stop();
+		});
+		$("#custom-autoTarget-button").on("click", () => {
+			config.autoTarget = !config.autoTarget;
 			$("#custom-autoTarget-button").css("color", config.autoTarget ? "green" : "red");
+		});
+		$("#custom-autoAttack-button").on("click", () => {
+			config.autoAttack = !config.autoAttack;
 			$("#custom-autoAttack-button").css("color", config.autoAttack ? "green" : "red");
-			// bind functions to the gui's buttons
-			$("#custom-gui-bot-title > span.window-close-style").on("click", () => {
-				$("#custom-gui").hide();
-			});
-			$("#custom-restart-button").on("click", () => {
-				app.restart();
-			});
-			$("#custom-stop-button").on("click", () => {
-				app.stop();
-			});
-			$("#custom-autoTarget-button").on("click", () => {
-				config.autoTarget = !config.autoTarget;
-				$("#custom-autoTarget-button").css("color", config.autoTarget ? "green" : "red");
-			});
-			$("#custom-autoAttack-button").on("click", () => {
-				config.autoAttack = !config.autoAttack;
-				$("#custom-autoAttack-button").css("color", config.autoAttack ? "green" : "red");
-			});
-			$("#custom-github-button").on("click", () => {
-				window.open("https://github.com/snollygolly/sourceio-automation");
-			});
-			$(".custom-gui-freq").on("keypress", (e) => {
-				if (e.keyCode !== 13) {
-					return;
-				}
-				const type = $(e.target).attr("data-type");
-				if (!config.freq[type]) {
-					// invalid input, disregard i guess?
-					return;
-				}
-				config.freq[type] = $(e.target).val();
-				log(`* Frequency for '${type}' set to ${config.freq[type]}`);
-			});
-			$(".custom-gui-msg").on("keypress", (e) => {
-				if (e.keyCode !== 13) {
-					return;
-				}
-				config.message = $(e.target).val();
-				log(`* Message for  set to : ${config.message}`);
-			});
-			// make the bot window draggable
-			const botWindow = ("#custom-gui");
-			$(document).on("mousedown", botWindow, (e) => {
-				vars.gui.dragReady = true;
-				vars.gui.dragOffset.x = e.pageX - $(botWindow).position().left;
-				vars.gui.dragOffset.y = e.pageY - $(botWindow).position().top;
-			});
-			$(document).on("mouseup", botWindow, () => {
-				vars.gui.dragReady = false;
-			});
-			$(document).on("mousemove", (e) => {
-				if (vars.gui.dragReady) {
-					$(botWindow).css("top", `${e.pageY - vars.gui.dragOffset.y}px`);
-					$(botWindow).css("left", `${e.pageX - vars.gui.dragOffset.x}px`);
-				}
-			});
-		}
+		});
+		$("#custom-github-button").on("click", () => {
+			window.open("https://github.com/snollygolly/sourceio-automation");
+		});
+		$(".custom-gui-freq").on("keypress", (e) => {
+			if (e.keyCode !== 13) {
+				return;
+			}
+			const type = $(e.target).attr("data-type");
+			if (!config.freq[type]) {
+				// invalid input, disregard i guess?
+				return;
+			}
+			config.freq[type] = $(e.target).val();
+			log(`* Frequency for '${type}' set to ${config.freq[type]}`);
+		});
+		$(".custom-gui-msg").on("keypress", (e) => {
+			if (e.keyCode !== 13) {
+				return;
+			}
+			config.message = $(e.target).val();
+			log(`* Message for  set to : ${config.message}`);
+		});
+		// make the bot window draggable
+		const botWindow = ("#custom-gui");
+		$(document).on("mousedown", botWindow, (e) => {
+			vars.gui.dragReady = true;
+			vars.gui.dragOffset.x = e.pageX - $(botWindow).position().left;
+			vars.gui.dragOffset.y = e.pageY - $(botWindow).position().top;
+		});
+		$(document).on("mouseup", botWindow, () => {
+			vars.gui.dragReady = false;
+		});
+		$(document).on("mousemove", (e) => {
+			if (vars.gui.dragReady) {
+				$(botWindow).css("top", `${e.pageY - vars.gui.dragOffset.y}px`);
+				$(botWindow).css("left", `${e.pageX - vars.gui.dragOffset.x}px`);
+			}
+		});
 	}
 };
 
