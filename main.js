@@ -69,22 +69,22 @@ vars = {
 	hackFailures: 0,
 	// the different types of miners and their current rank
 	minerStatus: [
-		{name: "shop-basic-miner", value: 0},
-		{name: "shop-advanced-miner", value: 0},
-		{name: "shop-mining-drill", value: 0},
-		{name: "shop-data-center", value: 0},
-		{name: "shop-bot-net", value: 0},
-		{name: "shop-quantum-server", value: 0}
+		{ name: "shop-basic-miner", value: 0 },
+		{ name: "shop-advanced-miner", value: 0 },
+		{ name: "shop-mining-drill", value: 0 },
+		{ name: "shop-data-center", value: 0 },
+		{ name: "shop-bot-net", value: 0 },
+		{ name: "shop-quantum-server", value: 0 }
 	],
 	fireWall: [
-		{name: "A", index: 1, needUpgrade: true},
-		{name: "B", index: 2, needUpgrade: true},
-		{name: "C", index: 3, needUpgrade: true},
-		{name: "ALL", needUpgrade: true}
+		{ name: "A", index: 1, needUpgrade: true },
+		{ name: "B", index: 2, needUpgrade: true },
+		{ name: "C", index: 3, needUpgrade: true },
+		{ name: "ALL", needUpgrade: true }
 	],
 	gui: {
 		dragReady: false,
-		dragOffset: {x: 0, y: 0}
+		dragOffset: { x: 0, y: 0 }
 	}
 };
 
@@ -108,8 +108,10 @@ app = {
 				$("#desktop-computer").children("img").click();
 			}
 			if (config.gui.enabled === true) {
-				if ($("#custom-gui").is(":visible") === false) {
-					log("* Opening bot window");
+				log("* Opening bot window");
+				if ($("#custom-gui").length > 0) {
+					$("#custom-gui").show();
+				} else {
 					gui.show();
 				}
 			} else {
@@ -149,17 +151,21 @@ app = {
 	automate: () => {
 		// does everything to prep for hacking except word guessing
 		app.attack();
-		// start the loop for btc monitoring
-		vars.loops.miner = setInterval(loops.miner, config.freq.mine);
-		// start the loop for upgrades
-		vars.loops.upgrade = setInterval(loops.upgrade, config.freq.upgrade);
+		if (vars.loops.miner === null) {
+			// start the loop for btc monitoring
+			vars.loops.miner = setInterval(loops.miner, config.freq.mine);
+		}
+		if (vars.loops.upgrade === null) {
+			// start the loop for upgrades
+			vars.loops.upgrade = setInterval(loops.upgrade, config.freq.upgrade);
+		}
 	},
 
 	attack: () => {
 
 		// if the auto target is toggled, choose the target.
 		if (config.autoTarget) {
-		// with playerToAttack = 0 choose between the 4 first players from the player list
+			// with playerToAttack = 0 choose between the 4 first players from the player list
 			const rndTarget = getRandomInt(config.playerToAttack, config.playerToAttack + 3);
 			// playerToAttack is an int, the index of the player list
 			const targetName = $("#player-list").children("tr").eq(rndTarget)[0].innerText;
@@ -170,19 +176,20 @@ app = {
 		}
 		// if the auto attack port is toggled, choose the port and click
 		if (config.autoAttack) {
-			const portNumber = getRandomInt(1,3);
+			const portNumber = getRandomInt(1, 3);
 			// do a check for money
 			const portStyle = $(`#window-other-port${portNumber}`).attr("style");
 			if (portStyle.indexOf("opacity: 1") === -1) {
-			// this port costs too much, let's wait a bit
+				// this port costs too much, let's wait a bit
 				log("* Hack too expensive, waiting");
 				setTimeout(app.attack, config.freq.broke);
 				return;
 			}
 			$(`#window-other-port${portNumber}`).click();
 		}
-
-		vars.loops.word = setInterval(loops.word, config.freq.word);
+		if (vars.loops.word === null) {
+			vars.loops.word = setInterval(loops.word, config.freq.word);
+		}
 	},
 
 	findWord: () => {
@@ -322,7 +329,7 @@ loops = {
 			return;
 		// get a random firewall
 		// i refers to the location in the vars.firewall array
-		const i = getRandomInt(0,2);
+		const i = getRandomInt(0, 2);
 		// index refers to 1,2,3, the index in the DOM (use for selectors)
 		const index = vars.fireWall[i].index;
 		// if this fireWall is already fully upgraded, get an other random firewall.
@@ -331,7 +338,7 @@ loops = {
 		vars.balance = parseInt($("#window-my-coinamount").text());
 		// if the back button is visible, we're on a page, let's back out and hide the firewall warning.
 		if ($("#window-firewall-pagebutton").is(":visible") === true) {
-			$("#tutorial-firewall").css("display","none");
+			$("#tutorial-firewall").css("display", "none");
 			$("#window-firewall-pagebutton").click();
 		}
 
@@ -376,9 +383,6 @@ loops = {
 
 gui = {
 	show: () => {
-		if ($("#custom-gui").length > 0) {
-			$("#custom-gui").show();
-		}
 		const sizeCSS = `height: ${config.gui.height}; width: ${config.gui.width};`;
 		const labelMap = {
 			word: "Word Speed",
